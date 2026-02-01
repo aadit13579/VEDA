@@ -1,0 +1,19 @@
+version: '3.8'
+services:
+  # The Database
+  redis:
+    image: redis:alpine
+    container_name: veda_redis
+    ports:
+      - "6379:6379"
+
+  # The UI (Redis Commander)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: veda_redis_ui
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis

@@ -1,13 +1,15 @@
 version: '3.8'
+
 services:
-  # The Database
   redis:
     image: redis:alpine
     container_name: veda_redis
     ports:
       - "6379:6379"
+    volumes:
+      # This maps the data inside the container to a folder on your laptop
+      - redis_data:/data
 
-  # The UI (Redis Commander)
   redis-commander:
     image: rediscommander/redis-commander:latest
     container_name: veda_redis_ui
@@ -17,3 +19,7 @@ services:
       - "8081:8081"
     depends_on:
       - redis
+
+# Define the volume explicitly
+volumes:
+  redis_data:

@@ -1,2 +1,3 @@
 filetype>=1.2.0
 fastapi>=0.128.0
+redis>=7.1.0

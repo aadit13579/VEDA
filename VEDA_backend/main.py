@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import ingest, text_engine, vision_engine
+from routers import ingest
 
 app = FastAPI(title="VEDA API", version="1.0")
 

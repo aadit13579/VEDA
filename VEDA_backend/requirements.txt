@@ -14,8 +14,9 @@ pytesseract>=0.3.13
 huggingface_hub
 
 # --- AI Engines ---
+doclayout-yolo
 ultralytics>=8.1.0       
-paddleocr>=2.7.0         
-google-generativeai>=0.4.0 
-transformers>=4.37.0    
-sentencepiece          
+# paddleocr>=2.7.0         
+# google-generativeai>=0.4.0 
+# transformers>=4.37.0    
+# sentencepiece          

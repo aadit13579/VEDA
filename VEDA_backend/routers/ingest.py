@@ -10,8 +10,12 @@ router = APIRouter()
 UPLOAD_DIR = "storage"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+import time
+
 @router.post("/upload")
 async def upload_and_identify(file: UploadFile = File(...)):
+    start_time = time.time()
+    
     # 1. Generate a Unique ID and Save Path
     file_id = str(uuid.uuid4())
     # We keep the original extension to help with fallback detection
@@ -56,13 +60,16 @@ async def upload_and_identify(file: UploadFile = File(...)):
             category = "OFFICE_PPT"
         elif file_extension in ['.txt']:
             category = "TEXT_FILE"
-
+            
+    process_time = (time.time() - start_time) * 1000
+    
     return {
         "status": "success",
         "file_id": file_id,
         "filename": file.filename,
         "detected_mime": mime_type,
-        "category": category  # <--- This is what your frontend needs
+        "category": category,
+        "process_time_ms": round(process_time, 2)
     }
 
 def _classify_pdf(path):

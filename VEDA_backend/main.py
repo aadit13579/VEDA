@@ -1,12 +1,12 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from routers import ingest, layout_analysis
+from routers import ingest, layout_analysis, spatial_sort
 from utils.logger import get_logger
 import time
 import traceback
 
-logger = get_logger()
+logger = get_logger(__name__)
 
 app = FastAPI(title="VEDA API", version="1.0")
 
@@ -52,6 +52,7 @@ async def log_requests(request: Request, call_next):
 # Register the Routers
 app.include_router(ingest.router, prefix="/api/v1", tags=["Ingest"])
 app.include_router(layout_analysis.router, prefix="/api/v1", tags=["Layout Analysis"])
+app.include_router(spatial_sort.router, prefix="/api/v1", tags=["Spatial Sort"])
 
 
 @app.get("/")

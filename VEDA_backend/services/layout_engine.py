@@ -3,11 +3,11 @@ import cv2
 import numpy as np
 import fitz  # PyMuPDF
 from huggingface_hub import hf_hub_download
-import logging
+from utils.logger import get_logger
 from doclayout_yolo import YOLOv10
 
 # Get logger
-logger = logging.getLogger("VEDA_API")
+logger = get_logger(__name__)
 
 # --- CONFIGURATION ---
 REPO_ID = "juliozhao/DocLayout-YOLO-DocStructBench"
@@ -84,20 +84,22 @@ def analyze_layout(image_array):
     Input: Single Page Image (OpenCV Array)
     Output: Sorted List of regions [{'type': 'Text', 'bbox': [...], 'confidence': ...}]
     """
+    logger.info(f"Starting analyze_layout for image of shape {image_array.shape}")
     # Check for load error
     if MODEL_LOAD_ERROR:
+        logger.error(f"Analyze layout failed: Model not loaded. Error: {MODEL_LOAD_ERROR}")
         raise RuntimeError(f"Model failed to load at startup: {MODEL_LOAD_ERROR}")
 
     # DocLayout-YOLO Inference
     # imgsz=1024 is recommended for this model
-    logger.info(f"Running inference on image {image_array.shape}")
+    logger.debug(f"Running inference on image {image_array.shape} with DocLayout-YOLO")
     results = model.predict(image_array, imgsz=1024, verbose=False, conf=0.25)
     
     detected_regions = []
 
     # Process Results
     for result in results:
-        logger.info(f"Found {len(result.boxes)} boxes.")
+        logger.debug(f"Found {len(result.boxes)} raw boxes from inference.")
         for box in result.boxes:
             # 1. Get Coordinates [x1, y1, x2, y2]
             coords = [int(x) for x in box.xyxy[0].tolist()]
@@ -117,6 +119,7 @@ def analyze_layout(image_array):
 
     # Sort standard reading order
     sorted_regions = sort_boxes(detected_regions)
+    logger.info(f"Finished analyze_layout. Processed {len(sorted_regions)} regions.")
 
     return sorted_regions
 

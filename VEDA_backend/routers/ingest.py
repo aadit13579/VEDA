@@ -4,6 +4,9 @@ import os
 import uuid
 import filetype  # The library that reads magic numbers
 import fitz      # PyMuPDF (for deep PDF checking)
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 router = APIRouter()
 
@@ -14,6 +17,7 @@ import time
 
 @router.post("/upload")
 async def upload_and_identify(file: UploadFile = File(...)):
+    logger.info(f"Received upload request for file: {file.filename}")
     start_time = time.time()
     
     # 1. Generate a Unique ID and Save Path
@@ -62,6 +66,8 @@ async def upload_and_identify(file: UploadFile = File(...)):
             category = "TEXT_FILE"
             
     process_time = (time.time() - start_time) * 1000
+    
+    logger.info(f"File upload complete: {file.filename} -> {file_id}, category: {category}")
     
     return {
         "status": "success",

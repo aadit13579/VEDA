@@ -7,7 +7,7 @@ from utils.logger import get_logger
 import traceback
 import time
 
-logger = get_logger()
+logger = get_logger(__name__)
 
 router = APIRouter()
 
@@ -18,6 +18,7 @@ os.makedirs(DEBUG_DIR, exist_ok=True)
 
 @router.post("/analyze_layout/{file_id}")
 async def generate_bounding_boxes(file_id: str):
+    logger.info(f"Received layout analysis request for file_id: {file_id}")
     start_time = time.time()
     """
     1. Finds the file using file_id.
@@ -66,6 +67,8 @@ async def generate_bounding_boxes(file_id: str):
             )
 
         process_time = (time.time() - start_time) * 1000
+        
+        logger.info(f"Layout analysis completed for {file_id} in {process_time:.2f}ms")
 
         return {
             "status": "success",

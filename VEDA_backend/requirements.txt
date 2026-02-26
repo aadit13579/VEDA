@@ -1,4 +1,21 @@
+# --- Core Backend ---
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+python-multipart>=0.0.9
 filetype>=1.2.0
-fastapi>=0.128.0
-redis>=7.1.0
-python-multipart>=0.0.22
+redis>=5.0.1
+python-dotenv>=1.0.0
+
+# --- PDF & Image Processing ---
+PyMuPDF>=1.23.0
+opencv-python-headless>=4.9.0.80  
+Pillow>=10.2.0
+pytesseract>=0.3.13
+huggingface_hub
+
+# --- AI Engines ---
+ultralytics>=8.1.0       
+paddleocr>=2.7.0         
+google-generativeai>=0.4.0 
+transformers>=4.37.0    
+sentencepiece          

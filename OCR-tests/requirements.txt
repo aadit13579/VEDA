@@ -1,0 +1,9 @@
+pytesseract
+paddlepaddle
+paddleocr
+jiwer
+opencv-python
+pandas
+transformers
+torch
+Pillow

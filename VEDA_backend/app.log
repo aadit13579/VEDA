@@ -1,0 +1,42 @@
+2026-03-14 13:36:09,651 - app.services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1684, 1190, 3)
+2026-03-14 13:36:09,654 - app.services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1684, 1190, 3) with DocLayout-YOLO
+2026-03-14 13:36:23,700 - app.services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 1 raw boxes from inference.
+2026-03-14 13:36:23,719 - app.services.layout_engine - INFO - [layout_engine.py:122:analyze_layout] - Finished analyze_layout. Processed 1 regions.
+2026-03-14 13:36:23,726 - app.services.spatial_sort_engine - INFO - [spatial_sort_engine.py:85:process_spatial_sort] - Starting process_spatial_sort.
+2026-03-14 13:36:23,741 - app.services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:115:process_spatial_sort] - Calculated thresholds - Vertical: 3.79, Horizontal: 0.58
+2026-03-14 13:36:23,741 - app.services.spatial_sort_engine - INFO - [spatial_sort_engine.py:146:process_spatial_sort] - Detected page layout: single column
+2026-03-14 13:36:23,744 - app.services.spatial_sort_engine - INFO - [spatial_sort_engine.py:160:process_spatial_sort] - Finished spatial sorting for page. Processed 1 regions.
+2026-03-14 13:36:24,125 - app.services.ocr_engine - ERROR - [ocr_engine.py:56:extract_text_from_region] - Error during OCR extraction: tesseract is not installed or it's not in your PATH. See README file for more information.
+2026-03-14 16:01:32,271 - app.services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1684, 1190, 3)
+2026-03-14 16:01:32,296 - app.services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1684, 1190, 3) with DocLayout-YOLO
+2026-03-14 16:01:46,385 - app.services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 1 raw boxes from inference.
+2026-03-14 16:01:46,440 - app.services.layout_engine - INFO - [layout_engine.py:122:analyze_layout] - Finished analyze_layout. Processed 1 regions.
+2026-03-14 16:01:46,446 - app.services.spatial_sort_engine - INFO - [spatial_sort_engine.py:85:process_spatial_sort] - Starting process_spatial_sort.
+2026-03-14 16:01:46,457 - app.services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:115:process_spatial_sort] - Calculated thresholds - Vertical: 3.79, Horizontal: 0.58
+2026-03-14 16:01:46,460 - app.services.spatial_sort_engine - INFO - [spatial_sort_engine.py:146:process_spatial_sort] - Detected page layout: single column
+2026-03-14 16:01:46,463 - app.services.spatial_sort_engine - INFO - [spatial_sort_engine.py:160:process_spatial_sort] - Finished spatial sorting for page. Processed 1 regions.
+2026-03-14 16:01:46,864 - app.services.ocr_engine - ERROR - [ocr_engine.py:56:extract_text_from_region] - Error during OCR extraction: tesseract is not installed or it's not in your PATH. See README file for more information.
+2026-03-14 16:45:23,358 - app.services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1684, 1190, 3)
+2026-03-14 16:45:23,359 - app.services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1684, 1190, 3) with DocLayout-YOLO
+2026-03-14 16:45:34,330 - app.services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 1 raw boxes from inference.
+2026-03-14 16:45:34,347 - app.services.layout_engine - INFO - [layout_engine.py:122:analyze_layout] - Finished analyze_layout. Processed 1 regions.
+2026-03-14 16:45:34,348 - app.services.spatial_sort_engine - INFO - [spatial_sort_engine.py:85:process_spatial_sort] - Starting process_spatial_sort.
+2026-03-14 16:45:34,348 - app.services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:115:process_spatial_sort] - Calculated thresholds - Vertical: 3.79, Horizontal: 0.58
+2026-03-14 16:45:34,348 - app.services.spatial_sort_engine - INFO - [spatial_sort_engine.py:146:process_spatial_sort] - Detected page layout: single column
+2026-03-14 16:45:34,350 - app.services.spatial_sort_engine - INFO - [spatial_sort_engine.py:160:process_spatial_sort] - Finished spatial sorting for page. Processed 1 regions.
+2026-03-14 16:47:49,582 - app.services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1684, 1190, 3)
+2026-03-14 16:47:49,582 - app.services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1684, 1190, 3) with DocLayout-YOLO
+2026-03-14 16:47:53,643 - app.services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 1 raw boxes from inference.
+2026-03-14 16:47:53,647 - app.services.layout_engine - INFO - [layout_engine.py:122:analyze_layout] - Finished analyze_layout. Processed 1 regions.
+2026-03-14 16:47:53,647 - app.services.spatial_sort_engine - INFO - [spatial_sort_engine.py:85:process_spatial_sort] - Starting process_spatial_sort.
+2026-03-14 16:47:53,647 - app.services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:115:process_spatial_sort] - Calculated thresholds - Vertical: 3.79, Horizontal: 0.58
+2026-03-14 16:47:53,650 - app.services.spatial_sort_engine - INFO - [spatial_sort_engine.py:146:process_spatial_sort] - Detected page layout: single column
+2026-03-14 16:47:53,652 - app.services.spatial_sort_engine - INFO - [spatial_sort_engine.py:160:process_spatial_sort] - Finished spatial sorting for page. Processed 1 regions.
+2026-03-14 16:49:01,706 - app.services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1684, 1190, 3)
+2026-03-14 16:49:01,709 - app.services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1684, 1190, 3) with DocLayout-YOLO
+2026-03-14 16:49:09,335 - app.services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 1 raw boxes from inference.
+2026-03-14 16:49:09,335 - app.services.layout_engine - INFO - [layout_engine.py:122:analyze_layout] - Finished analyze_layout. Processed 1 regions.
+2026-03-14 16:49:09,337 - app.services.spatial_sort_engine - INFO - [spatial_sort_engine.py:85:process_spatial_sort] - Starting process_spatial_sort.
+2026-03-14 16:49:09,337 - app.services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:115:process_spatial_sort] - Calculated thresholds - Vertical: 3.79, Horizontal: 0.58
+2026-03-14 16:49:09,337 - app.services.spatial_sort_engine - INFO - [spatial_sort_engine.py:146:process_spatial_sort] - Detected page layout: single column
+2026-03-14 16:49:09,337 - app.services.spatial_sort_engine - INFO - [spatial_sort_engine.py:160:process_spatial_sort] - Finished spatial sorting for page. Processed 1 regions.

@@ -1,12 +1,18 @@
 import cv2
 import numpy as np
+import os
 import pytesseract
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
 # Set the Tesseract executable path for Windows
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+tesseract_path = os.getenv("TESSERACT_PATH")
+
+if tesseract_path:
+    pytesseract.pytesseract.tesseract_cmd = tesseract_path
+else:
+    logger.warning("TESSERACT_PATH not set. Using system default.")
 
 
 def extract_text_from_region(image: np.ndarray, bbox: list) -> str:

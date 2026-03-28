@@ -9,10 +9,17 @@ logger = get_logger(__name__)
 # Set the Tesseract executable path for Windows
 tesseract_path = os.getenv("TESSERACT_PATH")
 
+if not tesseract_path:
+    # Check standard Windows install location as fallback
+    default_path = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+    if os.path.exists(default_path):
+        tesseract_path = default_path
+        logger.info(f"TESSERACT_PATH not set. Found Tesseract at default location: {default_path}")
+    else:
+        logger.warning("TESSERACT_PATH not set and Tesseract not found at default location.")
+
 if tesseract_path:
     pytesseract.pytesseract.tesseract_cmd = tesseract_path
-else:
-    logger.warning("TESSERACT_PATH not set. Using system default.")
 
 
 def extract_text_from_region(image: np.ndarray, bbox: list) -> str:

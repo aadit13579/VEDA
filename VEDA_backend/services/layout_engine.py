@@ -107,18 +107,27 @@ def analyze_layout(image_array):
             # 2. Get Class Name (Text, Table, Picture, Header...)
             class_id = int(box.cls[0])
             class_name = model.names[class_id]
+            
+            if class_name.lower() == "abandon":
+                continue
+
             confidence = float(box.conf[0])
 
             detected_regions.append(
                 {
-                    "type": class_name,
+                    "label": class_name,
                     "bbox": coords,
-                    "confidence": confidence,
+                    "confidence": round(confidence, 2),
                 }
             )
 
     # Sort standard reading order
     sorted_regions = sort_boxes(detected_regions)
+    
+    # Add unique IDs, reading order, and parent ID
+    for idx, region in enumerate(sorted_regions, start=1):
+        region["id"] = f"r{idx}"
+        
     logger.info(f"Finished analyze_layout. Processed {len(sorted_regions)} regions.")
 
     return sorted_regions
@@ -137,7 +146,7 @@ def draw_layout_on_image(image, regions, output_path):
 
     for region in regions:
         x1, y1, x2, y2 = region["bbox"]
-        label = f"{region['type']} {region['confidence']:.2f}"
+        label = f"{region['label']} {region['confidence']:.2f}"
 
         # Draw Rectangle
         cv2.rectangle(debug_image, (x1, y1), (x2, y2), color, thickness)

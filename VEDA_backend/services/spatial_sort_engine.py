@@ -31,7 +31,7 @@ def recursive_xy_cut(boxes: List[Dict[str, Any]], vertical_gap_threshold: float,
             gap_midpoint = (max_x2_so_far + current_x1) / 2
             is_masked = False
             for box in boxes:
-                if box.get('type') in ["table", "figure", "isolate_formula", "table_caption"]:
+                if box.get('label', '').lower() in ["table", "figure", "isolate_formula", "table_caption"]:
                     if box['bbox'][0] < gap_midpoint < box['bbox'][2]:
                         is_masked = True
                         break
@@ -92,7 +92,7 @@ def process_spatial_sort(layout_payload: dict) -> dict:
         regions = page_data.get("regions", [])
         
         # Step 1: Clean
-        valid_regions = [r for r in regions if r.get("type", "").lower() != "abandon"]
+        valid_regions = [r for r in regions if r.get("label", "").lower() != "abandon"]
         
         if not valid_regions:
             page_data["regions"] = []
@@ -114,35 +114,16 @@ def process_spatial_sort(layout_payload: dict) -> dict:
         
         logger.debug(f"Calculated thresholds - Vertical: {vertical_gap_threshold:.2f}, Horizontal: {horizontal_gap_threshold:.2f}")
 
-        # Page Layout Detection (Count major vertical gaps)
-        boxes_by_x = sorted(valid_regions, key=lambda b: b['bbox'][0])
-        max_x2_so_far = boxes_by_x[0]['bbox'][2]
-        valid_v_gaps = 0
-        
-        for i in range(1, len(boxes_by_x)):
-            current_x1 = boxes_by_x[i]['bbox'][0]
-            gap = current_x1 - max_x2_so_far
-            
-            if gap > vertical_gap_threshold:
-                gap_midpoint = (max_x2_so_far + current_x1) / 2
-                is_masked = False
-                for box in valid_regions:
-                    if box.get('type') in ["table", "figure", "isolate_formula", "table_caption"]:
-                        if box['bbox'][0] < gap_midpoint < box['bbox'][2]:
-                            is_masked = True
-                            break
-                if not is_masked:
-                    valid_v_gaps += 1
-                    
-            max_x2_so_far = max(max_x2_so_far, boxes_by_x[i]['bbox'][2])
-            
-        if valid_v_gaps == 0:
-            page_data["page_layout"] = "single column"
-        elif valid_v_gaps == 1:
+        page_mid = (min_x1 + max_x2) / 2
+        x_centers = [(r["bbox"][0] + r["bbox"][2]) / 2 for r in valid_regions]
+
+        left = [x for x in x_centers if x < page_mid]
+        right = [x for x in x_centers if x >= page_mid]
+        if len(left) > 2 and len(right) > 2:
             page_data["page_layout"] = "2 col"
         else:
-            page_data["page_layout"] = "3 col"
-            
+            page_data["page_layout"] = "single column"
+
         logger.info(f"Detected page layout: {page_data['page_layout']}")
 
         # Step 4: Recursive Selection

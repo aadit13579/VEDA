@@ -51,7 +51,9 @@ async def generate_bounding_boxes(file_id: str):
         # 3. Process each page
         for page_num, img in enumerate(images):
             # Run AI
+            page_start = time.time()
             regions = analyze_layout(img)
+            page_time = (time.time() - page_start) * 1000
 
             # Draw Boxes
             output_filename = f"{file_id}_page_{page_num+1}.jpg"
@@ -62,6 +64,10 @@ async def generate_bounding_boxes(file_id: str):
                 {
                     "page": page_num + 1,
                     "regions": regions,
+                    "meta": {
+                        "process_time_ms": round(page_time, 2),
+                        "model": "doclayout_yolo"
+                    },
                     "debug_image_url": f"/api/v1/layout/debug_image/{output_filename}",
                 }
             )

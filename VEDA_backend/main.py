@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from routers import ingest, layout_analysis, spatial_sort, ocr
+from routers import ingest, layout_analysis, spatial_sort, ocr, redis_api, gemini
 from utils.logger import get_logger
 import time
 import traceback
@@ -54,6 +54,8 @@ app.include_router(ingest.router, prefix="/api/v1", tags=["Ingest"])
 app.include_router(layout_analysis.router, prefix="/api/v1", tags=["Layout Analysis"])
 app.include_router(spatial_sort.router, prefix="/api/v1", tags=["Spatial Sort"])
 app.include_router(ocr.router, prefix="/api/v1", tags=["OCR"])
+app.include_router(redis_api.router, prefix="/api/v1", tags=["Redis"])
+app.include_router(gemini.router, prefix="/api/v1", tags=["Gemini"])
 
 
 @app.get("/")

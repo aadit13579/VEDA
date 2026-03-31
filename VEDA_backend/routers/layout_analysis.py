@@ -3,6 +3,7 @@ from fastapi.responses import FileResponse
 import os
 import glob
 from services.layout_engine import pdf_to_images, analyze_layout, draw_layout_on_image
+from services.redis_client import set_page, set_total_pages
 from utils.logger import get_logger
 import traceback
 import time
@@ -71,6 +72,12 @@ async def generate_bounding_boxes(file_id: str):
                     "debug_image_url": f"/api/v1/layout/debug_image/{output_filename}",
                 }
             )
+
+        # --- Redis: cache each page's layout data ---
+        for page_result in results:
+            set_page(file_id, page_result["page"], page_result)
+        set_total_pages(file_id, len(images))
+        logger.info(f"Cached {len(results)} pages in Redis for file {file_id}")
 
         process_time = (time.time() - start_time) * 1000
         

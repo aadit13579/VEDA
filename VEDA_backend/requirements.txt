@@ -22,6 +22,6 @@ doclayout-yolo
 ultralytics>=8.1.0 
 markdownify>=1.1.0
 # paddleocr>=2.7.0         
-# google-generativeai>=0.4.0 
+google-generativeai>=0.4.0
 # transformers>=4.37.0    
 # sentencepiece          

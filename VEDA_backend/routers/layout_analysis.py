@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 import os
 import glob
+import cv2
 from services.layout_engine import pdf_to_images, analyze_layout, draw_layout_on_image
 from services.redis_client import set_page, set_total_pages
 from utils.logger import get_logger
@@ -38,14 +39,23 @@ async def generate_bounding_boxes(file_id: str):
         )
 
     file_path = files[0]
+    file_extension = os.path.splitext(file_path)[1].lower()
 
     try:
-        # 2. Convert to Images
-        # Note: If it's already an image, we handle that; if PDF, we convert.
-        # For this snippet, assuming PDF as per your ingest logic, or we can add image logic later.
-        with open(file_path, "rb") as f:
-            file_bytes = f.read()
-        images = pdf_to_images(file_bytes)
+        # 2. Load Images - Handle both PDF and image files
+        images = []
+
+        if file_extension == ".pdf":
+            # PDF: Use pdf_to_images
+            with open(file_path, "rb") as f:
+                file_bytes = f.read()
+            images = pdf_to_images(file_bytes)
+        else:
+            # Image: Load directly with OpenCV
+            img = cv2.imread(file_path)
+            if img is None:
+                raise ValueError(f"Failed to load image file: {file_path}")
+            images = [img]
 
         results = []
 
@@ -67,7 +77,7 @@ async def generate_bounding_boxes(file_id: str):
                     "regions": regions,
                     "meta": {
                         "process_time_ms": round(page_time, 2),
-                        "model": "doclayout_yolo"
+                        "model": "doclayout_yolo",
                     },
                     "debug_image_url": f"/api/v1/layout/debug_image/{output_filename}",
                 }
@@ -80,7 +90,7 @@ async def generate_bounding_boxes(file_id: str):
         logger.info(f"Cached {len(results)} pages in Redis for file {file_id}")
 
         process_time = (time.time() - start_time) * 1000
-        
+
         logger.info(f"Layout analysis completed for {file_id} in {process_time:.2f}ms")
 
         return {
@@ -88,7 +98,7 @@ async def generate_bounding_boxes(file_id: str):
             "file_id": file_id,
             "pages_processed": len(images),
             "layout_data": results,
-            "process_time_ms": round(process_time, 2)
+            "process_time_ms": round(process_time, 2),
         }
 
     except Exception as e:
@@ -103,9 +113,9 @@ async def get_debug_image(filename: str):
     file_path = os.path.join(DEBUG_DIR, filename)
     logger.info(f"Requested debug image: {filename}")
     logger.info(f"Looking for file at: {os.path.abspath(file_path)}")
-    
+
     if os.path.exists(file_path):
         return FileResponse(file_path)
-    
+
     logger.error(f"❌ Image not found at: {os.path.abspath(file_path)}")
     raise HTTPException(status_code=404, detail="Image not found")

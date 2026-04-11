@@ -32,7 +32,9 @@ load_dotenv(dotenv_path=os.path.abspath(_env_path))
 
 _api_key = os.getenv("GENERATIVE_LANGUAGE_KEY")
 if not _api_key:
-    logger.warning("GENERATIVE_LANGUAGE_KEY not found in .env — Gemini calls will fail.")
+    logger.warning(
+        "GENERATIVE_LANGUAGE_KEY not found in .env — Gemini calls will fail."
+    )
 else:
     genai.configure(api_key=_api_key)
     logger.info("Gemini API configured successfully.")
@@ -75,7 +77,9 @@ def _load_page_image(file_id: str, page: int) -> np.ndarray:
     doc = fitz.open(file_path)
     page_index = page - 1
     if page_index < 0 or page_index >= len(doc):
-        raise ValueError(f"Page {page} does not exist. Document has {len(doc)} page(s).")
+        raise ValueError(
+            f"Page {page} does not exist. Document has {len(doc)} page(s)."
+        )
 
     pix = doc[page_index].get_pixmap(matrix=fitz.Matrix(2, 2))
     img_data = np.frombuffer(pix.samples, dtype=np.uint8).reshape(
@@ -92,9 +96,11 @@ def crop_and_preprocess(image: np.ndarray, bbox: List[int]) -> Image.Image:
     x1, y1, x2, y2 = bbox
     h, w = image.shape[:2]
 
-    # Clamp coordinates
-    x1, y1 = max(0, x1), max(0, y1)
-    x2, y2 = min(w, x2), min(h, y2)
+    # Clamp all coordinates to image bounds
+    x1 = max(0, min(x1, w - 1))
+    y1 = max(0, min(y1, h - 1))
+    x2 = max(x1 + 1, min(x2, w))  # Ensure x2 > x1
+    y2 = max(y1 + 1, min(y2, h))  # Ensure y2 > y1
 
     cropped = image[y1:y2, x1:x2]
 
@@ -117,15 +123,15 @@ def crop_and_preprocess(image: np.ndarray, bbox: List[int]) -> Image.Image:
 # Type-based weight bonuses   (higher = more relevant)
 _TYPE_WEIGHTS: dict[str, float] = {
     "figure_caption": 300,
-    "table_caption":  300,
-    "caption":        300,
-    "title":          150,
+    "table_caption": 300,
+    "caption": 300,
+    "title": 150,
     "section_header": 120,
     "section-header": 120,
-    "text":           50,
-    "plain_text":     50,
-    "paragraph":      50,
-    "list":           40,
+    "text": 50,
+    "plain_text": 50,
+    "paragraph": 50,
+    "list": 40,
 }
 
 # Bonus when a region is in the same column as the image
@@ -199,9 +205,9 @@ def _score_region(
     img_y1, img_y2 = image_bbox[1], image_bbox[3]
     r_y1, r_y2 = r_bbox[1], r_bbox[3]
 
-    if r_y1 >= img_y2:        # region is BELOW the image
+    if r_y1 >= img_y2:  # region is BELOW the image
         score += _VERTICAL_BELOW_BONUS
-    elif r_y2 <= img_y1:      # region is ABOVE the image
+    elif r_y2 <= img_y1:  # region is ABOVE the image
         score += _VERTICAL_ABOVE_BONUS
     # else: region is to the side — no bonus
 
@@ -241,7 +247,9 @@ def gather_context(
 
     # Compute page diagonal from the bounding area of all regions
     if regions:
-        all_bboxes = [r.get("bbox", [0, 0, 0, 0]) for r in regions if len(r.get("bbox", [])) == 4]
+        all_bboxes = [
+            r.get("bbox", [0, 0, 0, 0]) for r in regions if len(r.get("bbox", [])) == 4
+        ]
         if all_bboxes:
             page_width = max(b[2] for b in all_bboxes)
             page_height = max(b[3] for b in all_bboxes)
@@ -250,7 +258,7 @@ def gather_context(
     else:
         page_width, page_height = 1, 1
 
-    page_diag = (page_width ** 2 + page_height ** 2) ** 0.5
+    page_diag = (page_width**2 + page_height**2) ** 0.5
 
     # --- Find best caption (highest-scoring caption-type region) ---
     caption = None
@@ -327,7 +335,9 @@ def gather_context(
 
     if redis_needs_update:
         set_page(file_id, page, page_data)
-        logger.info(f"Gather context performed OCR on missing regions. Updated Redis for page {page}.")
+        logger.info(
+            f"Gather context performed OCR on missing regions. Updated Redis for page {page}."
+        )
 
     context_text = "\n".join(
         r.get("text", "").strip() for r in top_k_regions if r.get("text")
@@ -345,6 +355,7 @@ Describe the image clearly using the caption and nearby text.
 Focus on what the image shows and its role in the document.
 Use bullet points if helpful.
 """.strip()
+
 
 def describe_image(
     file_id: str,
@@ -378,7 +389,7 @@ def describe_image(
             if bbox_matches(r.get("bbox", []), bbox):
                 target_region = r
                 break
-        
+
         # If cache hit, return immediately
         if target_region and target_region.get("gemini_response"):
             logger.info(f"Redis Cache HIT for Gemini explanation of bbox {bbox}")
@@ -393,7 +404,9 @@ def describe_image(
 
     # 2. Crop and preprocess
     pil_image = crop_and_preprocess(full_image, bbox)
-    logger.info(f"Image cropped & preprocessed: {pil_image.size}, mode={pil_image.mode}")
+    logger.info(
+        f"Image cropped & preprocessed: {pil_image.size}, mode={pil_image.mode}"
+    )
 
     # 3. Gather context via spatial scoring
     ctx = gather_context(file_id, page, bbox, full_image, top_k)

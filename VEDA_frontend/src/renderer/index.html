@@ -1,40 +1,121 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Electron</title>
-    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+    <title>VEDA — Visual Engine for Document Accessibility</title>
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; media-src 'self' blob:; connect-src 'self' http://localhost:*"
     />
-
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
     <link href="./assets/main.css" type="text/css" rel="stylesheet" />
   </head>
 
-  <body>
-    <div id="app">
-      <img alt="logo" class="logo" src="./assets/electron.svg" />
-      <div class="creator">Powered by electron-vite</div>
-      <div class="text">
-        Build an Electron app with
-        <span class="ts">TypeScript</span>
-      </div>
-      <p class="tip">Please try pressing <code>F12</code> to open the devTool</p>
-      <div class="actions">
-        <div class="action">
-          <a href="https://electron-vite.org/" target="_blank" rel="noreferrer">Documentation</a>
-        </div>
-        <div class="action">
-          <a id="ipcHandler" target="_blank" rel="noreferrer">Send IPC</a>
-        </div>
+  <body class="bg-veda-bg text-veda-text font-['Inter',sans-serif] min-h-screen flex items-center justify-center overflow-hidden select-none">
+
+    <!-- Background gradient orbs -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden">
+      <div class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl"></div>
+      <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl"></div>
+    </div>
+
+    <!-- Main Container -->
+    <div id="app" class="relative z-10 w-full max-w-2xl mx-auto px-6 py-10">
+
+      <!-- Header -->
+      <div class="text-center mb-10">
+        <h1 class="text-5xl font-extrabold tracking-tight">
+          <span class="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+            VEDA
+          </span>
+        </h1>
+        <p class="mt-2 text-veda-text-muted text-sm tracking-wide">
+          Visual Engine for Document Accessibility
+        </p>
       </div>
 
-      <ul class="versions">
-        <li class="electron-version"></li>
-        <li class="chrome-version"></li>
-        <li class="node-version"></li>
-      </ul>
+      <!-- Upload Zone -->
+      <div
+        id="uploadZone"
+        class="group relative border-2 border-dashed border-veda-border rounded-2xl p-10 text-center cursor-pointer transition-all duration-300 hover:border-veda-accent hover:bg-veda-surface/50 mb-8"
+      >
+        <!-- Upload Icon -->
+        <div class="animate-float mb-4">
+          <svg class="mx-auto w-14 h-14 text-veda-text-muted group-hover:text-veda-accent transition-colors duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.338-2.32 3 3 0 013.182 5.595H6.75z" />
+          </svg>
+        </div>
+        <p class="text-lg font-semibold text-veda-text-muted group-hover:text-veda-text transition-colors duration-300">
+          Upload Documents
+        </p>
+        <p class="text-xs text-veda-text-muted/60 mt-1">
+          PDF, PNG, JPG, TIFF — Click to browse
+        </p>
+
+        <!-- File list (shown after upload) -->
+        <div id="fileList" class="mt-5 space-y-2 hidden"></div>
+      </div>
+
+      <!-- Mic + Start Row -->
+      <div class="flex items-center justify-center gap-8">
+
+        <!-- Mic Button -->
+        <div class="flex flex-col items-center gap-2">
+          <div class="relative">
+            <!-- Pulse ring (visible when recording) -->
+            <div id="micPulse" class="absolute inset-0 rounded-full bg-red-500/40 hidden animate-pulse-ring"></div>
+            <button
+              id="micBtn"
+              class="relative w-16 h-16 rounded-full bg-veda-surface border-2 border-veda-border flex items-center justify-center transition-all duration-300 hover:border-veda-accent hover:bg-veda-surface-hover hover:scale-105 active:scale-95"
+            >
+              <svg id="micIcon" class="w-7 h-7 text-veda-text-muted transition-colors duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+              </svg>
+            </button>
+          </div>
+          <span id="micLabel" class="text-xs text-veda-text-muted">Record Voice</span>
+        </div>
+
+        <!-- Start Button -->
+        <button
+          id="startBtn"
+          class="relative px-10 py-4 rounded-xl font-semibold text-white text-lg overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-indigo-500/25 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+        >
+          <!-- Gradient background -->
+          <div class="absolute inset-0 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-xl"></div>
+          <!-- Shimmer effect -->
+          <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full hover:translate-x-full transition-transform duration-700"></div>
+          <span class="relative z-10 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
+            </svg>
+            Start Processing
+          </span>
+        </button>
+      </div>
+
+      <!-- Progress Bar -->
+      <div id="progressContainer" class="mt-8 hidden">
+        <div class="w-full bg-veda-surface rounded-full h-2.5 overflow-hidden">
+          <div
+            id="progressFill"
+            class="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full transition-all duration-500 ease-out"
+            style="width: 0%"
+          ></div>
+        </div>
+        <p id="progressText" class="text-xs text-veda-text-muted mt-2 text-center"></p>
+      </div>
+
+      <!-- Status Bar -->
+      <div id="statusBar" class="mt-4 text-center">
+        <p id="statusText" class="text-sm text-veda-text-muted/60"></p>
+      </div>
+
     </div>
 
     <script type="module" src="./src/renderer.ts"></script>

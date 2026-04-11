@@ -1,0 +1,604 @@
+2026-04-08 15:25:17,581 - services.ocr_engine - WARNING - [ocr_engine.py:19:<module>] - TESSERACT_PATH not set and Tesseract not found at default location.
+2026-04-08 15:25:24,674 - services.gemini_engine - WARNING - [gemini_engine.py:35:<module>] - GENERATIVE_LANGUAGE_KEY not found in .env — Gemini calls will fail.
+2026-04-08 15:27:24,455 - main - INFO - [main.py:28:log_requests] - Incoming Request: GET / from 127.0.0.1
+2026-04-08 15:27:24,625 - main - INFO - [main.py:63:home] - Health check endpoint hit
+2026-04-08 15:27:24,642 - main - INFO - [main.py:35:log_requests] - Completed: 200 in 202.46ms
+2026-04-08 15:27:37,293 - main - INFO - [main.py:28:log_requests] - Incoming Request: POST /api/v1/upload from 127.0.0.1
+2026-04-08 15:27:37,772 - routers.ingest - INFO - [ingest.py:20:upload_and_identify] - Received upload request for file: ML TPS PAYPAL_39&45.pdf
+2026-04-08 15:27:38,012 - routers.ingest - INFO - [ingest.py:70:upload_and_identify] - File upload complete: ML TPS PAYPAL_39&45.pdf -> 40a7a440-b0d7-410b-b8cb-43d3cf8a71c0, category: PDF_SCANNED
+2026-04-08 15:27:38,025 - main - INFO - [main.py:35:log_requests] - Completed: 200 in 736.08ms
+2026-04-08 15:27:38,039 - main - INFO - [main.py:28:log_requests] - Incoming Request: POST /api/v1/analyze_layout/40a7a440-b0d7-410b-b8cb-43d3cf8a71c0 from 127.0.0.1
+2026-04-08 15:27:38,049 - routers.layout_analysis - INFO - [layout_analysis.py:22:generate_bounding_boxes] - Received layout analysis request for file_id: 40a7a440-b0d7-410b-b8cb-43d3cf8a71c0
+2026-04-08 15:27:41,699 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1620, 2880, 3)
+2026-04-08 15:27:41,706 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1620, 2880, 3) with DocLayout-YOLO
+2026-04-08 15:27:51,867 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 5 raw boxes from inference.
+2026-04-08 15:27:51,891 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 5 regions.
+2026-04-08 15:27:52,018 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1620, 2880, 3)
+2026-04-08 15:27:52,020 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1620, 2880, 3) with DocLayout-YOLO
+2026-04-08 15:27:56,326 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 8 raw boxes from inference.
+2026-04-08 15:27:56,329 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 8 regions.
+2026-04-08 15:27:56,406 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1620, 2880, 3)
+2026-04-08 15:27:56,408 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1620, 2880, 3) with DocLayout-YOLO
+2026-04-08 15:27:59,310 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 4 raw boxes from inference.
+2026-04-08 15:27:59,312 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 4 regions.
+2026-04-08 15:27:59,398 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1620, 2880, 3)
+2026-04-08 15:27:59,400 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1620, 2880, 3) with DocLayout-YOLO
+2026-04-08 15:28:03,150 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 4 raw boxes from inference.
+2026-04-08 15:28:03,153 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 4 regions.
+2026-04-08 15:28:03,243 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1620, 2880, 3)
+2026-04-08 15:28:03,244 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1620, 2880, 3) with DocLayout-YOLO
+2026-04-08 15:28:06,319 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 7 raw boxes from inference.
+2026-04-08 15:28:06,321 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 7 regions.
+2026-04-08 15:28:06,406 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1620, 2880, 3)
+2026-04-08 15:28:06,407 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1620, 2880, 3) with DocLayout-YOLO
+2026-04-08 15:28:09,374 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 11 raw boxes from inference.
+2026-04-08 15:28:09,376 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 11 regions.
+2026-04-08 15:28:09,454 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1620, 2880, 3)
+2026-04-08 15:28:09,455 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1620, 2880, 3) with DocLayout-YOLO
+2026-04-08 15:28:12,445 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 0 raw boxes from inference.
+2026-04-08 15:28:12,446 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 0 regions.
+2026-04-08 15:28:12,893 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:1  (TTL=3600s)
+2026-04-08 15:28:12,903 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:2  (TTL=3600s)
+2026-04-08 15:28:12,910 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:3  (TTL=3600s)
+2026-04-08 15:28:12,914 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:4  (TTL=3600s)
+2026-04-08 15:28:12,919 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:5  (TTL=3600s)
+2026-04-08 15:28:12,923 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:6  (TTL=3600s)
+2026-04-08 15:28:12,928 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:7  (TTL=3600s)
+2026-04-08 15:28:12,930 - services.redis_client - DEBUG - [redis_client.py:82:set_total_pages] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:total_pages = 7
+2026-04-08 15:28:12,932 - routers.layout_analysis - INFO - [layout_analysis.py:80:generate_bounding_boxes] - Cached 7 pages in Redis for file 40a7a440-b0d7-410b-b8cb-43d3cf8a71c0
+2026-04-08 15:28:12,934 - routers.layout_analysis - INFO - [layout_analysis.py:84:generate_bounding_boxes] - Layout analysis completed for 40a7a440-b0d7-410b-b8cb-43d3cf8a71c0 in 34879.38ms
+2026-04-08 15:28:13,002 - main - INFO - [main.py:35:log_requests] - Completed: 200 in 34962.42ms
+2026-04-08 15:28:13,094 - main - INFO - [main.py:28:log_requests] - Incoming Request: POST /api/v1/layout/sort from 127.0.0.1
+2026-04-08 15:28:13,125 - routers.spatial_sort - INFO - [spatial_sort.py:41:sort_layout] - Received layout sort request.
+2026-04-08 15:28:13,132 - services.redis_client - DEBUG - [redis_client.py:96:get_page] - Redis HIT  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:1
+2026-04-08 15:28:13,134 - services.redis_client - DEBUG - [redis_client.py:96:get_page] - Redis HIT  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:2
+2026-04-08 15:28:13,135 - services.redis_client - DEBUG - [redis_client.py:96:get_page] - Redis HIT  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:3
+2026-04-08 15:28:13,137 - services.redis_client - DEBUG - [redis_client.py:96:get_page] - Redis HIT  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:4
+2026-04-08 15:28:13,138 - services.redis_client - DEBUG - [redis_client.py:96:get_page] - Redis HIT  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:5
+2026-04-08 15:28:13,141 - services.redis_client - DEBUG - [redis_client.py:96:get_page] - Redis HIT  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:6
+2026-04-08 15:28:13,142 - services.redis_client - DEBUG - [redis_client.py:96:get_page] - Redis HIT  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:7
+2026-04-08 15:28:13,143 - services.redis_client - DEBUG - [redis_client.py:123:get_all_pages] - Redis: fetched 7 pages for file 40a7a440-b0d7-410b-b8cb-43d3cf8a71c0
+2026-04-08 15:28:13,143 - routers.spatial_sort - INFO - [spatial_sort.py:63:sort_layout] - Fetched 7 pages from Redis for file 40a7a440-b0d7-410b-b8cb-43d3cf8a71c0.
+2026-04-08 15:28:13,144 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:85:process_spatial_sort] - Starting process_spatial_sort.
+2026-04-08 15:28:13,145 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:115:process_spatial_sort] - Calculated thresholds - Vertical: 22.21, Horizontal: 12.60
+2026-04-08 15:28:13,145 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:127:process_spatial_sort] - Detected page layout: single column
+2026-04-08 15:28:13,147 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 0 with 5 boxes
+2026-04-08 15:28:13,147 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 0] Chose Horizontal Cut with gap: 26.00 (Threshold: 12.60)
+2026-04-08 15:28:13,147 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 1 with 4 boxes
+2026-04-08 15:28:13,148 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:141:process_spatial_sort] - Finished spatial sorting for page. Processed 5 regions.
+2026-04-08 15:28:13,148 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:115:process_spatial_sort] - Calculated thresholds - Vertical: 18.12, Horizontal: 16.12
+2026-04-08 15:28:13,148 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:127:process_spatial_sort] - Detected page layout: single column
+2026-04-08 15:28:13,149 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 0 with 8 boxes
+2026-04-08 15:28:13,149 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 0] Chose Horizontal Cut with gap: 127.00 (Threshold: 16.12)
+2026-04-08 15:28:13,149 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 1 with 6 boxes
+2026-04-08 15:28:13,150 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 1] Chose Horizontal Cut with gap: 97.00 (Threshold: 16.12)
+2026-04-08 15:28:13,150 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 2 with 4 boxes
+2026-04-08 15:28:13,151 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 2] Chose Horizontal Cut with gap: 52.00 (Threshold: 16.12)
+2026-04-08 15:28:13,151 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 3 with 3 boxes
+2026-04-08 15:28:13,151 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 3] Chose Horizontal Cut with gap: 18.00 (Threshold: 16.12)
+2026-04-08 15:28:13,151 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 4 with 2 boxes
+2026-04-08 15:28:13,152 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 2 with 2 boxes
+2026-04-08 15:28:13,152 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 1 with 2 boxes
+2026-04-08 15:28:13,153 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 1] Chose Horizontal Cut with gap: 20.00 (Threshold: 16.12)
+2026-04-08 15:28:13,154 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:141:process_spatial_sort] - Finished spatial sorting for page. Processed 8 regions.
+2026-04-08 15:28:13,154 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:115:process_spatial_sort] - Calculated thresholds - Vertical: 39.62, Horizontal: 24.02
+2026-04-08 15:28:13,154 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:127:process_spatial_sort] - Detected page layout: single column
+2026-04-08 15:28:13,155 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 0 with 4 boxes
+2026-04-08 15:28:13,155 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:141:process_spatial_sort] - Finished spatial sorting for page. Processed 4 regions.
+2026-04-08 15:28:13,155 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:115:process_spatial_sort] - Calculated thresholds - Vertical: 40.37, Horizontal: 9.62
+2026-04-08 15:28:13,155 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:127:process_spatial_sort] - Detected page layout: single column
+2026-04-08 15:28:13,157 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 0 with 4 boxes
+2026-04-08 15:28:13,157 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 0] Chose Horizontal Cut with gap: 151.00 (Threshold: 9.62)
+2026-04-08 15:28:13,157 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 1 with 3 boxes
+2026-04-08 15:28:13,158 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:46:recursive_xy_cut] - [Depth 1] Chose Vertical Cut with gap: 64.00 (Threshold: 40.37)
+2026-04-08 15:28:13,158 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 2 with 2 boxes
+2026-04-08 15:28:13,158 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 2] Chose Horizontal Cut with gap: 20.00 (Threshold: 9.62)
+2026-04-08 15:28:13,159 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:141:process_spatial_sort] - Finished spatial sorting for page. Processed 4 regions.
+2026-04-08 15:28:13,159 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:115:process_spatial_sort] - Calculated thresholds - Vertical: 31.32, Horizontal: 22.59
+2026-04-08 15:28:13,160 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:127:process_spatial_sort] - Detected page layout: single column
+2026-04-08 15:28:13,161 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 0 with 7 boxes
+2026-04-08 15:28:13,161 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 0] Chose Horizontal Cut with gap: 124.00 (Threshold: 22.59)
+2026-04-08 15:28:13,161 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 1 with 5 boxes
+2026-04-08 15:28:13,161 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 1] Chose Horizontal Cut with gap: 28.00 (Threshold: 22.59)
+2026-04-08 15:28:13,162 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 2 with 3 boxes
+2026-04-08 15:28:13,162 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 2] Chose Horizontal Cut with gap: 25.00 (Threshold: 22.59)
+2026-04-08 15:28:13,162 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 3 with 2 boxes
+2026-04-08 15:28:13,162 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 3] Chose Horizontal Cut with gap: 24.00 (Threshold: 22.59)
+2026-04-08 15:28:13,164 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 2 with 2 boxes
+2026-04-08 15:28:13,164 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 1 with 2 boxes
+2026-04-08 15:28:13,164 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:141:process_spatial_sort] - Finished spatial sorting for page. Processed 7 regions.
+2026-04-08 15:28:13,164 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:115:process_spatial_sort] - Calculated thresholds - Vertical: 41.32, Horizontal: 17.47
+2026-04-08 15:28:13,165 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:127:process_spatial_sort] - Detected page layout: 2 col
+2026-04-08 15:28:13,165 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 0 with 11 boxes
+2026-04-08 15:28:13,165 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 0] Chose Horizontal Cut with gap: 24.00 (Threshold: 17.47)
+2026-04-08 15:28:13,166 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 1 with 5 boxes
+2026-04-08 15:28:13,166 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 1 with 6 boxes
+2026-04-08 15:28:13,166 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:46:recursive_xy_cut] - [Depth 1] Chose Vertical Cut with gap: 115.00 (Threshold: 41.32)
+2026-04-08 15:28:13,167 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 2 with 2 boxes
+2026-04-08 15:28:13,167 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 2 with 4 boxes
+2026-04-08 15:28:13,168 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:46:recursive_xy_cut] - [Depth 2] Chose Vertical Cut with gap: 47.00 (Threshold: 41.32)
+2026-04-08 15:28:13,168 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 3 with 2 boxes
+2026-04-08 15:28:13,168 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 3 with 2 boxes
+2026-04-08 15:28:13,168 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 3] Chose Horizontal Cut with gap: 20.00 (Threshold: 17.47)
+2026-04-08 15:28:13,169 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:141:process_spatial_sort] - Finished spatial sorting for page. Processed 11 regions.
+2026-04-08 15:28:13,174 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:1  (TTL=3600s)
+2026-04-08 15:28:13,178 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:2  (TTL=3600s)
+2026-04-08 15:28:13,182 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:3  (TTL=3600s)
+2026-04-08 15:28:13,187 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:4  (TTL=3600s)
+2026-04-08 15:28:13,190 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:5  (TTL=3600s)
+2026-04-08 15:28:13,196 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:6  (TTL=3600s)
+2026-04-08 15:28:13,200 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:7  (TTL=3600s)
+2026-04-08 15:28:13,200 - routers.spatial_sort - INFO - [spatial_sort.py:80:sort_layout] - Updated sorted pages in Redis for file 40a7a440-b0d7-410b-b8cb-43d3cf8a71c0.
+2026-04-08 15:28:13,201 - routers.spatial_sort - INFO - [spatial_sort.py:85:sort_layout] - Layout sort completed successfully.
+2026-04-08 15:28:13,203 - main - INFO - [main.py:35:log_requests] - Completed: 200 in 111.43ms
+2026-04-08 15:28:25,052 - main - INFO - [main.py:28:log_requests] - Incoming Request: POST /api/v1/upload from 127.0.0.1
+2026-04-08 15:28:25,265 - routers.ingest - INFO - [ingest.py:20:upload_and_identify] - Received upload request for file: ML TPS PAYPAL_39&45.pdf
+2026-04-08 15:28:25,683 - routers.ingest - INFO - [ingest.py:70:upload_and_identify] - File upload complete: ML TPS PAYPAL_39&45.pdf -> 52711a95-9943-4d69-abb4-431e6132fafc, category: PDF_SCANNED
+2026-04-08 15:28:25,685 - main - INFO - [main.py:35:log_requests] - Completed: 200 in 633.11ms
+2026-04-08 15:28:25,692 - main - INFO - [main.py:28:log_requests] - Incoming Request: POST /api/v1/analyze_layout/40a7a440-b0d7-410b-b8cb-43d3cf8a71c0 from 127.0.0.1
+2026-04-08 15:28:25,695 - routers.layout_analysis - INFO - [layout_analysis.py:22:generate_bounding_boxes] - Received layout analysis request for file_id: 40a7a440-b0d7-410b-b8cb-43d3cf8a71c0
+2026-04-08 15:28:28,946 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1620, 2880, 3)
+2026-04-08 15:28:28,979 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1620, 2880, 3) with DocLayout-YOLO
+2026-04-08 15:28:33,416 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 5 raw boxes from inference.
+2026-04-08 15:28:33,466 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 5 regions.
+2026-04-08 15:28:33,823 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1620, 2880, 3)
+2026-04-08 15:28:33,825 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1620, 2880, 3) with DocLayout-YOLO
+2026-04-08 15:28:41,715 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 8 raw boxes from inference.
+2026-04-08 15:28:41,755 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 8 regions.
+2026-04-08 15:28:41,977 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1620, 2880, 3)
+2026-04-08 15:28:41,978 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1620, 2880, 3) with DocLayout-YOLO
+2026-04-08 15:28:55,437 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 4 raw boxes from inference.
+2026-04-08 15:28:55,440 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 4 regions.
+2026-04-08 15:28:55,538 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1620, 2880, 3)
+2026-04-08 15:28:55,538 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1620, 2880, 3) with DocLayout-YOLO
+2026-04-08 15:29:04,472 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 4 raw boxes from inference.
+2026-04-08 15:29:04,474 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 4 regions.
+2026-04-08 15:29:04,595 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1620, 2880, 3)
+2026-04-08 15:29:04,597 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1620, 2880, 3) with DocLayout-YOLO
+2026-04-08 15:29:15,922 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 7 raw boxes from inference.
+2026-04-08 15:29:15,924 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 7 regions.
+2026-04-08 15:29:16,069 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1620, 2880, 3)
+2026-04-08 15:29:16,077 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1620, 2880, 3) with DocLayout-YOLO
+2026-04-08 15:29:22,472 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 11 raw boxes from inference.
+2026-04-08 15:29:22,476 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 11 regions.
+2026-04-08 15:29:22,625 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1620, 2880, 3)
+2026-04-08 15:29:22,626 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1620, 2880, 3) with DocLayout-YOLO
+2026-04-08 15:29:26,071 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 0 raw boxes from inference.
+2026-04-08 15:29:26,072 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 0 regions.
+2026-04-08 15:29:26,213 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:1  (TTL=3600s)
+2026-04-08 15:29:26,224 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:2  (TTL=3600s)
+2026-04-08 15:29:26,233 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:3  (TTL=3600s)
+2026-04-08 15:29:26,240 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:4  (TTL=3600s)
+2026-04-08 15:29:26,249 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:5  (TTL=3600s)
+2026-04-08 15:29:26,258 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:6  (TTL=3600s)
+2026-04-08 15:29:26,265 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:7  (TTL=3600s)
+2026-04-08 15:29:26,269 - services.redis_client - DEBUG - [redis_client.py:82:set_total_pages] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:total_pages = 7
+2026-04-08 15:29:26,270 - routers.layout_analysis - INFO - [layout_analysis.py:80:generate_bounding_boxes] - Cached 7 pages in Redis for file 40a7a440-b0d7-410b-b8cb-43d3cf8a71c0
+2026-04-08 15:29:26,272 - routers.layout_analysis - INFO - [layout_analysis.py:84:generate_bounding_boxes] - Layout analysis completed for 40a7a440-b0d7-410b-b8cb-43d3cf8a71c0 in 60577.15ms
+2026-04-08 15:29:26,360 - main - INFO - [main.py:35:log_requests] - Completed: 200 in 60667.62ms
+2026-04-08 15:29:26,629 - main - INFO - [main.py:28:log_requests] - Incoming Request: POST /api/v1/analyze_layout/52711a95-9943-4d69-abb4-431e6132fafc from 127.0.0.1
+2026-04-08 15:29:26,661 - routers.layout_analysis - INFO - [layout_analysis.py:22:generate_bounding_boxes] - Received layout analysis request for file_id: 52711a95-9943-4d69-abb4-431e6132fafc
+2026-04-08 15:29:31,952 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1620, 2880, 3)
+2026-04-08 15:29:31,958 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1620, 2880, 3) with DocLayout-YOLO
+2026-04-08 15:29:41,419 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 5 raw boxes from inference.
+2026-04-08 15:29:41,455 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 5 regions.
+2026-04-08 15:29:41,610 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1620, 2880, 3)
+2026-04-08 15:29:41,611 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1620, 2880, 3) with DocLayout-YOLO
+2026-04-08 15:29:51,215 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 8 raw boxes from inference.
+2026-04-08 15:29:51,219 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 8 regions.
+2026-04-08 15:29:51,311 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1620, 2880, 3)
+2026-04-08 15:29:51,313 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1620, 2880, 3) with DocLayout-YOLO
+2026-04-08 15:30:05,478 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 4 raw boxes from inference.
+2026-04-08 15:30:05,482 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 4 regions.
+2026-04-08 15:30:05,603 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1620, 2880, 3)
+2026-04-08 15:30:05,605 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1620, 2880, 3) with DocLayout-YOLO
+2026-04-08 15:30:10,663 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 4 raw boxes from inference.
+2026-04-08 15:30:10,666 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 4 regions.
+2026-04-08 15:30:10,774 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1620, 2880, 3)
+2026-04-08 15:30:10,775 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1620, 2880, 3) with DocLayout-YOLO
+2026-04-08 15:30:16,777 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 7 raw boxes from inference.
+2026-04-08 15:30:16,784 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 7 regions.
+2026-04-08 15:30:16,912 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1620, 2880, 3)
+2026-04-08 15:30:16,912 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1620, 2880, 3) with DocLayout-YOLO
+2026-04-08 15:30:22,105 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 11 raw boxes from inference.
+2026-04-08 15:30:22,109 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 11 regions.
+2026-04-08 15:30:22,209 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1620, 2880, 3)
+2026-04-08 15:30:22,213 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1620, 2880, 3) with DocLayout-YOLO
+2026-04-08 15:30:29,215 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 0 raw boxes from inference.
+2026-04-08 15:30:29,218 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 0 regions.
+2026-04-08 15:30:29,624 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:52711a95-9943-4d69-abb4-431e6132fafc:page:1  (TTL=3600s)
+2026-04-08 15:30:29,636 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:52711a95-9943-4d69-abb4-431e6132fafc:page:2  (TTL=3600s)
+2026-04-08 15:30:29,650 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:52711a95-9943-4d69-abb4-431e6132fafc:page:3  (TTL=3600s)
+2026-04-08 15:30:29,665 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:52711a95-9943-4d69-abb4-431e6132fafc:page:4  (TTL=3600s)
+2026-04-08 15:30:29,682 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:52711a95-9943-4d69-abb4-431e6132fafc:page:5  (TTL=3600s)
+2026-04-08 15:30:29,700 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:52711a95-9943-4d69-abb4-431e6132fafc:page:6  (TTL=3600s)
+2026-04-08 15:30:29,711 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:52711a95-9943-4d69-abb4-431e6132fafc:page:7  (TTL=3600s)
+2026-04-08 15:30:29,714 - services.redis_client - DEBUG - [redis_client.py:82:set_total_pages] - Redis SET  file:52711a95-9943-4d69-abb4-431e6132fafc:total_pages = 7
+2026-04-08 15:30:29,719 - routers.layout_analysis - INFO - [layout_analysis.py:80:generate_bounding_boxes] - Cached 7 pages in Redis for file 52711a95-9943-4d69-abb4-431e6132fafc
+2026-04-08 15:30:29,724 - routers.layout_analysis - INFO - [layout_analysis.py:84:generate_bounding_boxes] - Layout analysis completed for 52711a95-9943-4d69-abb4-431e6132fafc in 63062.37ms
+2026-04-08 15:30:29,820 - main - INFO - [main.py:35:log_requests] - Completed: 200 in 63194.60ms
+2026-04-08 15:30:30,116 - main - INFO - [main.py:28:log_requests] - Incoming Request: POST /api/v1/layout/sort from 127.0.0.1
+2026-04-08 15:30:30,193 - routers.spatial_sort - INFO - [spatial_sort.py:41:sort_layout] - Received layout sort request.
+2026-04-08 15:30:30,209 - services.redis_client - DEBUG - [redis_client.py:96:get_page] - Redis HIT  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:1
+2026-04-08 15:30:30,212 - services.redis_client - DEBUG - [redis_client.py:96:get_page] - Redis HIT  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:2
+2026-04-08 15:30:30,214 - services.redis_client - DEBUG - [redis_client.py:96:get_page] - Redis HIT  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:3
+2026-04-08 15:30:30,216 - services.redis_client - DEBUG - [redis_client.py:96:get_page] - Redis HIT  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:4
+2026-04-08 15:30:30,219 - services.redis_client - DEBUG - [redis_client.py:96:get_page] - Redis HIT  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:5
+2026-04-08 15:30:30,223 - services.redis_client - DEBUG - [redis_client.py:96:get_page] - Redis HIT  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:6
+2026-04-08 15:30:30,227 - services.redis_client - DEBUG - [redis_client.py:96:get_page] - Redis HIT  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:7
+2026-04-08 15:30:30,228 - services.redis_client - DEBUG - [redis_client.py:123:get_all_pages] - Redis: fetched 7 pages for file 40a7a440-b0d7-410b-b8cb-43d3cf8a71c0
+2026-04-08 15:30:30,229 - routers.spatial_sort - INFO - [spatial_sort.py:63:sort_layout] - Fetched 7 pages from Redis for file 40a7a440-b0d7-410b-b8cb-43d3cf8a71c0.
+2026-04-08 15:30:30,230 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:85:process_spatial_sort] - Starting process_spatial_sort.
+2026-04-08 15:30:30,233 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:115:process_spatial_sort] - Calculated thresholds - Vertical: 22.21, Horizontal: 12.60
+2026-04-08 15:30:30,234 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:127:process_spatial_sort] - Detected page layout: single column
+2026-04-08 15:30:30,236 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 0 with 5 boxes
+2026-04-08 15:30:30,237 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 0] Chose Horizontal Cut with gap: 26.00 (Threshold: 12.60)
+2026-04-08 15:30:30,240 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 1 with 4 boxes
+2026-04-08 15:30:30,240 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:141:process_spatial_sort] - Finished spatial sorting for page. Processed 5 regions.
+2026-04-08 15:30:30,241 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:115:process_spatial_sort] - Calculated thresholds - Vertical: 18.12, Horizontal: 16.12
+2026-04-08 15:30:30,245 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:127:process_spatial_sort] - Detected page layout: single column
+2026-04-08 15:30:30,247 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 0 with 8 boxes
+2026-04-08 15:30:30,247 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 0] Chose Horizontal Cut with gap: 127.00 (Threshold: 16.12)
+2026-04-08 15:30:30,248 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 1 with 6 boxes
+2026-04-08 15:30:30,248 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 1] Chose Horizontal Cut with gap: 97.00 (Threshold: 16.12)
+2026-04-08 15:30:30,249 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 2 with 4 boxes
+2026-04-08 15:30:30,251 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 2] Chose Horizontal Cut with gap: 52.00 (Threshold: 16.12)
+2026-04-08 15:30:30,252 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 3 with 3 boxes
+2026-04-08 15:30:30,252 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 3] Chose Horizontal Cut with gap: 18.00 (Threshold: 16.12)
+2026-04-08 15:30:30,254 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 4 with 2 boxes
+2026-04-08 15:30:30,256 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 2 with 2 boxes
+2026-04-08 15:30:30,257 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 1 with 2 boxes
+2026-04-08 15:30:30,259 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 1] Chose Horizontal Cut with gap: 20.00 (Threshold: 16.12)
+2026-04-08 15:30:30,259 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:141:process_spatial_sort] - Finished spatial sorting for page. Processed 8 regions.
+2026-04-08 15:30:30,260 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:115:process_spatial_sort] - Calculated thresholds - Vertical: 39.62, Horizontal: 24.02
+2026-04-08 15:30:30,262 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:127:process_spatial_sort] - Detected page layout: single column
+2026-04-08 15:30:30,263 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 0 with 4 boxes
+2026-04-08 15:30:30,263 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:141:process_spatial_sort] - Finished spatial sorting for page. Processed 4 regions.
+2026-04-08 15:30:30,265 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:115:process_spatial_sort] - Calculated thresholds - Vertical: 40.37, Horizontal: 9.62
+2026-04-08 15:30:30,268 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:127:process_spatial_sort] - Detected page layout: single column
+2026-04-08 15:30:30,275 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 0 with 4 boxes
+2026-04-08 15:30:30,276 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 0] Chose Horizontal Cut with gap: 151.00 (Threshold: 9.62)
+2026-04-08 15:30:30,276 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 1 with 3 boxes
+2026-04-08 15:30:30,277 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:46:recursive_xy_cut] - [Depth 1] Chose Vertical Cut with gap: 64.00 (Threshold: 40.37)
+2026-04-08 15:30:30,278 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 2 with 2 boxes
+2026-04-08 15:30:30,278 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 2] Chose Horizontal Cut with gap: 20.00 (Threshold: 9.62)
+2026-04-08 15:30:30,278 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:141:process_spatial_sort] - Finished spatial sorting for page. Processed 4 regions.
+2026-04-08 15:30:30,279 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:115:process_spatial_sort] - Calculated thresholds - Vertical: 31.32, Horizontal: 22.59
+2026-04-08 15:30:30,279 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:127:process_spatial_sort] - Detected page layout: single column
+2026-04-08 15:30:30,280 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 0 with 7 boxes
+2026-04-08 15:30:30,282 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 0] Chose Horizontal Cut with gap: 124.00 (Threshold: 22.59)
+2026-04-08 15:30:30,283 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 1 with 5 boxes
+2026-04-08 15:30:30,284 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 1] Chose Horizontal Cut with gap: 28.00 (Threshold: 22.59)
+2026-04-08 15:30:30,284 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 2 with 3 boxes
+2026-04-08 15:30:30,286 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 2] Chose Horizontal Cut with gap: 25.00 (Threshold: 22.59)
+2026-04-08 15:30:30,287 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 3 with 2 boxes
+2026-04-08 15:30:30,290 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 3] Chose Horizontal Cut with gap: 24.00 (Threshold: 22.59)
+2026-04-08 15:30:30,291 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 2 with 2 boxes
+2026-04-08 15:30:30,291 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 1 with 2 boxes
+2026-04-08 15:30:30,292 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:141:process_spatial_sort] - Finished spatial sorting for page. Processed 7 regions.
+2026-04-08 15:30:30,293 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:115:process_spatial_sort] - Calculated thresholds - Vertical: 41.32, Horizontal: 17.47
+2026-04-08 15:30:30,294 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:127:process_spatial_sort] - Detected page layout: 2 col
+2026-04-08 15:30:30,301 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 0 with 11 boxes
+2026-04-08 15:30:30,301 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 0] Chose Horizontal Cut with gap: 24.00 (Threshold: 17.47)
+2026-04-08 15:30:30,307 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 1 with 5 boxes
+2026-04-08 15:30:30,308 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 1 with 6 boxes
+2026-04-08 15:30:30,308 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:46:recursive_xy_cut] - [Depth 1] Chose Vertical Cut with gap: 115.00 (Threshold: 41.32)
+2026-04-08 15:30:30,309 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 2 with 2 boxes
+2026-04-08 15:30:30,309 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 2 with 4 boxes
+2026-04-08 15:30:30,310 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:46:recursive_xy_cut] - [Depth 2] Chose Vertical Cut with gap: 47.00 (Threshold: 41.32)
+2026-04-08 15:30:30,311 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 3 with 2 boxes
+2026-04-08 15:30:30,311 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 3 with 2 boxes
+2026-04-08 15:30:30,311 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 3] Chose Horizontal Cut with gap: 20.00 (Threshold: 17.47)
+2026-04-08 15:30:30,311 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:141:process_spatial_sort] - Finished spatial sorting for page. Processed 11 regions.
+2026-04-08 15:30:30,328 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:1  (TTL=3600s)
+2026-04-08 15:30:30,336 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:2  (TTL=3600s)
+2026-04-08 15:30:30,348 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:3  (TTL=3600s)
+2026-04-08 15:30:30,359 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:4  (TTL=3600s)
+2026-04-08 15:30:30,366 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:5  (TTL=3600s)
+2026-04-08 15:30:30,378 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:6  (TTL=3600s)
+2026-04-08 15:30:30,383 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:7  (TTL=3600s)
+2026-04-08 15:30:30,384 - routers.spatial_sort - INFO - [spatial_sort.py:80:sort_layout] - Updated sorted pages in Redis for file 40a7a440-b0d7-410b-b8cb-43d3cf8a71c0.
+2026-04-08 15:30:30,385 - routers.spatial_sort - INFO - [spatial_sort.py:85:sort_layout] - Layout sort completed successfully.
+2026-04-08 15:30:30,395 - main - INFO - [main.py:35:log_requests] - Completed: 200 in 286.77ms
+2026-04-08 15:30:30,426 - main - INFO - [main.py:28:log_requests] - Incoming Request: POST /api/v1/layout/sort from 127.0.0.1
+2026-04-08 15:30:30,431 - routers.spatial_sort - INFO - [spatial_sort.py:41:sort_layout] - Received layout sort request.
+2026-04-08 15:30:30,440 - services.redis_client - DEBUG - [redis_client.py:96:get_page] - Redis HIT  file:52711a95-9943-4d69-abb4-431e6132fafc:page:1
+2026-04-08 15:30:30,445 - services.redis_client - DEBUG - [redis_client.py:96:get_page] - Redis HIT  file:52711a95-9943-4d69-abb4-431e6132fafc:page:2
+2026-04-08 15:30:30,447 - services.redis_client - DEBUG - [redis_client.py:96:get_page] - Redis HIT  file:52711a95-9943-4d69-abb4-431e6132fafc:page:3
+2026-04-08 15:30:30,496 - services.redis_client - DEBUG - [redis_client.py:96:get_page] - Redis HIT  file:52711a95-9943-4d69-abb4-431e6132fafc:page:4
+2026-04-08 15:30:30,500 - services.redis_client - DEBUG - [redis_client.py:96:get_page] - Redis HIT  file:52711a95-9943-4d69-abb4-431e6132fafc:page:5
+2026-04-08 15:30:30,505 - services.redis_client - DEBUG - [redis_client.py:96:get_page] - Redis HIT  file:52711a95-9943-4d69-abb4-431e6132fafc:page:6
+2026-04-08 15:30:30,509 - services.redis_client - DEBUG - [redis_client.py:96:get_page] - Redis HIT  file:52711a95-9943-4d69-abb4-431e6132fafc:page:7
+2026-04-08 15:30:30,509 - services.redis_client - DEBUG - [redis_client.py:123:get_all_pages] - Redis: fetched 7 pages for file 52711a95-9943-4d69-abb4-431e6132fafc
+2026-04-08 15:30:30,509 - routers.spatial_sort - INFO - [spatial_sort.py:63:sort_layout] - Fetched 7 pages from Redis for file 52711a95-9943-4d69-abb4-431e6132fafc.
+2026-04-08 15:30:30,511 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:85:process_spatial_sort] - Starting process_spatial_sort.
+2026-04-08 15:30:30,512 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:115:process_spatial_sort] - Calculated thresholds - Vertical: 22.21, Horizontal: 12.60
+2026-04-08 15:30:30,513 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:127:process_spatial_sort] - Detected page layout: single column
+2026-04-08 15:30:30,516 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 0 with 5 boxes
+2026-04-08 15:30:30,516 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 0] Chose Horizontal Cut with gap: 26.00 (Threshold: 12.60)
+2026-04-08 15:30:30,518 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 1 with 4 boxes
+2026-04-08 15:30:30,519 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:141:process_spatial_sort] - Finished spatial sorting for page. Processed 5 regions.
+2026-04-08 15:30:30,526 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:115:process_spatial_sort] - Calculated thresholds - Vertical: 18.12, Horizontal: 16.12
+2026-04-08 15:30:30,527 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:127:process_spatial_sort] - Detected page layout: single column
+2026-04-08 15:30:30,530 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 0 with 8 boxes
+2026-04-08 15:30:30,531 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 0] Chose Horizontal Cut with gap: 127.00 (Threshold: 16.12)
+2026-04-08 15:30:30,531 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 1 with 6 boxes
+2026-04-08 15:30:30,532 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 1] Chose Horizontal Cut with gap: 97.00 (Threshold: 16.12)
+2026-04-08 15:30:30,532 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 2 with 4 boxes
+2026-04-08 15:30:30,533 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 2] Chose Horizontal Cut with gap: 52.00 (Threshold: 16.12)
+2026-04-08 15:30:30,534 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 3 with 3 boxes
+2026-04-08 15:30:30,534 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 3] Chose Horizontal Cut with gap: 18.00 (Threshold: 16.12)
+2026-04-08 15:30:30,534 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 4 with 2 boxes
+2026-04-08 15:30:30,535 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 2 with 2 boxes
+2026-04-08 15:30:30,536 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 1 with 2 boxes
+2026-04-08 15:30:30,537 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 1] Chose Horizontal Cut with gap: 20.00 (Threshold: 16.12)
+2026-04-08 15:30:30,537 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:141:process_spatial_sort] - Finished spatial sorting for page. Processed 8 regions.
+2026-04-08 15:30:30,543 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:115:process_spatial_sort] - Calculated thresholds - Vertical: 39.62, Horizontal: 24.02
+2026-04-08 15:30:30,544 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:127:process_spatial_sort] - Detected page layout: single column
+2026-04-08 15:30:30,546 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 0 with 4 boxes
+2026-04-08 15:30:30,547 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:141:process_spatial_sort] - Finished spatial sorting for page. Processed 4 regions.
+2026-04-08 15:30:30,560 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:115:process_spatial_sort] - Calculated thresholds - Vertical: 40.37, Horizontal: 9.62
+2026-04-08 15:30:30,563 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:127:process_spatial_sort] - Detected page layout: single column
+2026-04-08 15:30:30,567 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 0 with 4 boxes
+2026-04-08 15:30:30,570 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 0] Chose Horizontal Cut with gap: 151.00 (Threshold: 9.62)
+2026-04-08 15:30:30,574 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 1 with 3 boxes
+2026-04-08 15:30:30,596 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:46:recursive_xy_cut] - [Depth 1] Chose Vertical Cut with gap: 64.00 (Threshold: 40.37)
+2026-04-08 15:30:30,609 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 2 with 2 boxes
+2026-04-08 15:30:30,610 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 2] Chose Horizontal Cut with gap: 20.00 (Threshold: 9.62)
+2026-04-08 15:30:30,611 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:141:process_spatial_sort] - Finished spatial sorting for page. Processed 4 regions.
+2026-04-08 15:30:30,629 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:115:process_spatial_sort] - Calculated thresholds - Vertical: 31.32, Horizontal: 22.59
+2026-04-08 15:30:30,630 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:127:process_spatial_sort] - Detected page layout: single column
+2026-04-08 15:30:30,632 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 0 with 7 boxes
+2026-04-08 15:30:30,633 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 0] Chose Horizontal Cut with gap: 124.00 (Threshold: 22.59)
+2026-04-08 15:30:30,633 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 1 with 5 boxes
+2026-04-08 15:30:30,642 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 1] Chose Horizontal Cut with gap: 28.00 (Threshold: 22.59)
+2026-04-08 15:30:30,644 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 2 with 3 boxes
+2026-04-08 15:30:30,645 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 2] Chose Horizontal Cut with gap: 25.00 (Threshold: 22.59)
+2026-04-08 15:30:30,647 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 3 with 2 boxes
+2026-04-08 15:30:30,647 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 3] Chose Horizontal Cut with gap: 24.00 (Threshold: 22.59)
+2026-04-08 15:30:30,648 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 2 with 2 boxes
+2026-04-08 15:30:30,650 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 1 with 2 boxes
+2026-04-08 15:30:30,652 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:141:process_spatial_sort] - Finished spatial sorting for page. Processed 7 regions.
+2026-04-08 15:30:30,660 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:115:process_spatial_sort] - Calculated thresholds - Vertical: 41.32, Horizontal: 17.47
+2026-04-08 15:30:30,661 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:127:process_spatial_sort] - Detected page layout: 2 col
+2026-04-08 15:30:30,664 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 0 with 11 boxes
+2026-04-08 15:30:30,665 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 0] Chose Horizontal Cut with gap: 24.00 (Threshold: 17.47)
+2026-04-08 15:30:30,665 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 1 with 5 boxes
+2026-04-08 15:30:30,667 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 1 with 6 boxes
+2026-04-08 15:30:30,669 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:46:recursive_xy_cut] - [Depth 1] Chose Vertical Cut with gap: 115.00 (Threshold: 41.32)
+2026-04-08 15:30:30,674 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 2 with 2 boxes
+2026-04-08 15:30:30,677 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 2 with 4 boxes
+2026-04-08 15:30:30,680 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:46:recursive_xy_cut] - [Depth 2] Chose Vertical Cut with gap: 47.00 (Threshold: 41.32)
+2026-04-08 15:30:30,683 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 3 with 2 boxes
+2026-04-08 15:30:30,685 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 3 with 2 boxes
+2026-04-08 15:30:30,686 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 3] Chose Horizontal Cut with gap: 20.00 (Threshold: 17.47)
+2026-04-08 15:30:30,687 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:141:process_spatial_sort] - Finished spatial sorting for page. Processed 11 regions.
+2026-04-08 15:30:30,706 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:52711a95-9943-4d69-abb4-431e6132fafc:page:1  (TTL=3600s)
+2026-04-08 15:30:30,714 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:52711a95-9943-4d69-abb4-431e6132fafc:page:2  (TTL=3600s)
+2026-04-08 15:30:30,742 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:52711a95-9943-4d69-abb4-431e6132fafc:page:3  (TTL=3600s)
+2026-04-08 15:30:30,753 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:52711a95-9943-4d69-abb4-431e6132fafc:page:4  (TTL=3600s)
+2026-04-08 15:30:30,766 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:52711a95-9943-4d69-abb4-431e6132fafc:page:5  (TTL=3600s)
+2026-04-08 15:30:30,777 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:52711a95-9943-4d69-abb4-431e6132fafc:page:6  (TTL=3600s)
+2026-04-08 15:30:30,785 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:52711a95-9943-4d69-abb4-431e6132fafc:page:7  (TTL=3600s)
+2026-04-08 15:30:30,786 - routers.spatial_sort - INFO - [spatial_sort.py:80:sort_layout] - Updated sorted pages in Redis for file 52711a95-9943-4d69-abb4-431e6132fafc.
+2026-04-08 15:30:30,787 - routers.spatial_sort - INFO - [spatial_sort.py:85:sort_layout] - Layout sort completed successfully.
+2026-04-08 15:30:30,795 - main - INFO - [main.py:35:log_requests] - Completed: 200 in 368.24ms
+2026-04-08 15:33:49,007 - main - INFO - [main.py:28:log_requests] - Incoming Request: POST /api/v1/upload from 127.0.0.1
+2026-04-08 15:33:50,712 - routers.ingest - INFO - [ingest.py:20:upload_and_identify] - Received upload request for file: ML TPS PAYPAL_39&45.pdf
+2026-04-08 15:33:51,555 - routers.ingest - INFO - [ingest.py:70:upload_and_identify] - File upload complete: ML TPS PAYPAL_39&45.pdf -> 383be30c-79ff-4317-bd58-8090308a81b1, category: PDF_SCANNED
+2026-04-08 15:33:51,562 - main - INFO - [main.py:35:log_requests] - Completed: 200 in 2565.51ms
+2026-04-08 15:33:51,588 - main - INFO - [main.py:28:log_requests] - Incoming Request: POST /api/v1/analyze_layout/40a7a440-b0d7-410b-b8cb-43d3cf8a71c0 from 127.0.0.1
+2026-04-08 15:33:51,595 - routers.layout_analysis - INFO - [layout_analysis.py:22:generate_bounding_boxes] - Received layout analysis request for file_id: 40a7a440-b0d7-410b-b8cb-43d3cf8a71c0
+2026-04-08 15:33:56,389 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1620, 2880, 3)
+2026-04-08 15:33:56,395 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1620, 2880, 3) with DocLayout-YOLO
+2026-04-08 15:34:00,777 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 5 raw boxes from inference.
+2026-04-08 15:34:00,813 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 5 regions.
+2026-04-08 15:34:00,942 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1620, 2880, 3)
+2026-04-08 15:34:00,943 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1620, 2880, 3) with DocLayout-YOLO
+2026-04-08 15:34:03,921 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 8 raw boxes from inference.
+2026-04-08 15:34:03,924 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 8 regions.
+2026-04-08 15:34:04,003 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1620, 2880, 3)
+2026-04-08 15:34:04,004 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1620, 2880, 3) with DocLayout-YOLO
+2026-04-08 15:34:06,529 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 4 raw boxes from inference.
+2026-04-08 15:34:06,530 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 4 regions.
+2026-04-08 15:34:06,645 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1620, 2880, 3)
+2026-04-08 15:34:06,647 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1620, 2880, 3) with DocLayout-YOLO
+2026-04-08 15:34:10,835 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 4 raw boxes from inference.
+2026-04-08 15:34:10,836 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 4 regions.
+2026-04-08 15:34:10,899 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1620, 2880, 3)
+2026-04-08 15:34:10,900 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1620, 2880, 3) with DocLayout-YOLO
+2026-04-08 15:34:13,428 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 7 raw boxes from inference.
+2026-04-08 15:34:13,429 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 7 regions.
+2026-04-08 15:34:13,495 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1620, 2880, 3)
+2026-04-08 15:34:13,497 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1620, 2880, 3) with DocLayout-YOLO
+2026-04-08 15:34:16,714 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 11 raw boxes from inference.
+2026-04-08 15:34:16,716 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 11 regions.
+2026-04-08 15:34:16,788 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1620, 2880, 3)
+2026-04-08 15:34:16,789 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1620, 2880, 3) with DocLayout-YOLO
+2026-04-08 15:34:19,520 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 0 raw boxes from inference.
+2026-04-08 15:34:19,521 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 0 regions.
+2026-04-08 15:34:19,643 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:1  (TTL=3600s)
+2026-04-08 15:34:19,652 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:2  (TTL=3600s)
+2026-04-08 15:34:19,659 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:3  (TTL=3600s)
+2026-04-08 15:34:19,665 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:4  (TTL=3600s)
+2026-04-08 15:34:19,672 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:5  (TTL=3600s)
+2026-04-08 15:34:19,680 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:6  (TTL=3600s)
+2026-04-08 15:34:19,687 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:page:7  (TTL=3600s)
+2026-04-08 15:34:19,689 - services.redis_client - DEBUG - [redis_client.py:82:set_total_pages] - Redis SET  file:40a7a440-b0d7-410b-b8cb-43d3cf8a71c0:total_pages = 7
+2026-04-08 15:34:19,691 - routers.layout_analysis - INFO - [layout_analysis.py:80:generate_bounding_boxes] - Cached 7 pages in Redis for file 40a7a440-b0d7-410b-b8cb-43d3cf8a71c0
+2026-04-08 15:34:19,692 - routers.layout_analysis - INFO - [layout_analysis.py:84:generate_bounding_boxes] - Layout analysis completed for 40a7a440-b0d7-410b-b8cb-43d3cf8a71c0 in 28094.15ms
+2026-04-08 15:34:19,759 - main - INFO - [main.py:35:log_requests] - Completed: 200 in 28169.62ms
+2026-04-08 15:36:12,145 - main - INFO - [main.py:28:log_requests] - Incoming Request: GET / from 127.0.0.1
+2026-04-08 15:36:12,313 - main - INFO - [main.py:63:home] - Health check endpoint hit
+2026-04-08 15:36:12,336 - main - INFO - [main.py:35:log_requests] - Completed: 200 in 211.23ms
+2026-04-08 15:36:57,225 - main - INFO - [main.py:28:log_requests] - Incoming Request: POST /api/v1/upload from 127.0.0.1
+2026-04-08 15:36:57,520 - routers.ingest - INFO - [ingest.py:20:upload_and_identify] - Received upload request for file: ecell-sponsorship.pdf
+2026-04-08 15:36:57,944 - routers.ingest - INFO - [ingest.py:70:upload_and_identify] - File upload complete: ecell-sponsorship.pdf -> 3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f, category: PDF_DIGITAL
+2026-04-08 15:36:57,960 - main - INFO - [main.py:35:log_requests] - Completed: 200 in 754.15ms
+2026-04-08 15:36:57,994 - main - INFO - [main.py:28:log_requests] - Incoming Request: POST /api/v1/analyze_layout/3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f from 127.0.0.1
+2026-04-08 15:36:58,001 - routers.layout_analysis - INFO - [layout_analysis.py:22:generate_bounding_boxes] - Received layout analysis request for file_id: 3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f
+2026-04-08 15:37:01,631 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1685, 1191, 3)
+2026-04-08 15:37:01,641 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1685, 1191, 3) with DocLayout-YOLO
+2026-04-08 15:37:06,908 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 3 raw boxes from inference.
+2026-04-08 15:37:06,931 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 1 regions.
+2026-04-08 15:37:06,987 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1685, 1191, 3)
+2026-04-08 15:37:06,988 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1685, 1191, 3) with DocLayout-YOLO
+2026-04-08 15:37:10,027 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 2 raw boxes from inference.
+2026-04-08 15:37:10,028 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 2 regions.
+2026-04-08 15:37:10,057 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1685, 1191, 3)
+2026-04-08 15:37:10,059 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1685, 1191, 3) with DocLayout-YOLO
+2026-04-08 15:37:13,223 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 3 raw boxes from inference.
+2026-04-08 15:37:13,224 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 2 regions.
+2026-04-08 15:37:13,249 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1685, 1191, 3)
+2026-04-08 15:37:13,251 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1685, 1191, 3) with DocLayout-YOLO
+2026-04-08 15:37:16,676 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 3 raw boxes from inference.
+2026-04-08 15:37:16,678 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 1 regions.
+2026-04-08 15:37:16,707 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1685, 1191, 3)
+2026-04-08 15:37:16,710 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1685, 1191, 3) with DocLayout-YOLO
+2026-04-08 15:37:21,955 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 15 raw boxes from inference.
+2026-04-08 15:37:21,959 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 12 regions.
+2026-04-08 15:37:21,991 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1685, 1191, 3)
+2026-04-08 15:37:21,992 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1685, 1191, 3) with DocLayout-YOLO
+2026-04-08 15:37:25,696 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 13 raw boxes from inference.
+2026-04-08 15:37:25,698 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 12 regions.
+2026-04-08 15:37:25,731 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1685, 1191, 3)
+2026-04-08 15:37:25,733 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1685, 1191, 3) with DocLayout-YOLO
+2026-04-08 15:37:29,197 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 7 raw boxes from inference.
+2026-04-08 15:37:29,200 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 6 regions.
+2026-04-08 15:37:29,237 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1685, 1191, 3)
+2026-04-08 15:37:29,238 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1685, 1191, 3) with DocLayout-YOLO
+2026-04-08 15:37:32,740 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 8 raw boxes from inference.
+2026-04-08 15:37:32,742 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 8 regions.
+2026-04-08 15:37:32,781 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1685, 1191, 3)
+2026-04-08 15:37:32,782 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1685, 1191, 3) with DocLayout-YOLO
+2026-04-08 15:37:36,746 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 5 raw boxes from inference.
+2026-04-08 15:37:36,749 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 5 regions.
+2026-04-08 15:37:36,788 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1685, 1191, 3)
+2026-04-08 15:37:36,790 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1685, 1191, 3) with DocLayout-YOLO
+2026-04-08 15:37:40,421 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 5 raw boxes from inference.
+2026-04-08 15:37:40,424 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 5 regions.
+2026-04-08 15:37:40,458 - services.layout_engine - INFO - [layout_engine.py:87:analyze_layout] - Starting analyze_layout for image of shape (1685, 1191, 3)
+2026-04-08 15:37:40,460 - services.layout_engine - DEBUG - [layout_engine.py:95:analyze_layout] - Running inference on image (1685, 1191, 3) with DocLayout-YOLO
+2026-04-08 15:37:43,695 - services.layout_engine - DEBUG - [layout_engine.py:102:analyze_layout] - Found 5 raw boxes from inference.
+2026-04-08 15:37:43,696 - services.layout_engine - INFO - [layout_engine.py:131:analyze_layout] - Finished analyze_layout. Processed 5 regions.
+2026-04-08 15:37:43,805 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f:page:1  (TTL=3600s)
+2026-04-08 15:37:43,811 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f:page:2  (TTL=3600s)
+2026-04-08 15:37:43,817 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f:page:3  (TTL=3600s)
+2026-04-08 15:37:43,821 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f:page:4  (TTL=3600s)
+2026-04-08 15:37:43,827 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f:page:5  (TTL=3600s)
+2026-04-08 15:37:43,832 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f:page:6  (TTL=3600s)
+2026-04-08 15:37:43,839 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f:page:7  (TTL=3600s)
+2026-04-08 15:37:43,844 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f:page:8  (TTL=3600s)
+2026-04-08 15:37:43,850 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f:page:9  (TTL=3600s)
+2026-04-08 15:37:43,854 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f:page:10  (TTL=3600s)
+2026-04-08 15:37:43,858 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f:page:11  (TTL=3600s)
+2026-04-08 15:37:43,860 - services.redis_client - DEBUG - [redis_client.py:82:set_total_pages] - Redis SET  file:3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f:total_pages = 11
+2026-04-08 15:37:43,861 - routers.layout_analysis - INFO - [layout_analysis.py:80:generate_bounding_boxes] - Cached 11 pages in Redis for file 3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f
+2026-04-08 15:37:43,862 - routers.layout_analysis - INFO - [layout_analysis.py:84:generate_bounding_boxes] - Layout analysis completed for 3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f in 45859.34ms
+2026-04-08 15:37:43,936 - main - INFO - [main.py:35:log_requests] - Completed: 200 in 45942.91ms
+2026-04-08 15:37:44,124 - main - INFO - [main.py:28:log_requests] - Incoming Request: POST /api/v1/layout/sort from 127.0.0.1
+2026-04-08 15:37:44,154 - routers.spatial_sort - INFO - [spatial_sort.py:41:sort_layout] - Received layout sort request.
+2026-04-08 15:37:44,162 - services.redis_client - DEBUG - [redis_client.py:96:get_page] - Redis HIT  file:3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f:page:1
+2026-04-08 15:37:44,164 - services.redis_client - DEBUG - [redis_client.py:96:get_page] - Redis HIT  file:3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f:page:2
+2026-04-08 15:37:44,165 - services.redis_client - DEBUG - [redis_client.py:96:get_page] - Redis HIT  file:3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f:page:3
+2026-04-08 15:37:44,168 - services.redis_client - DEBUG - [redis_client.py:96:get_page] - Redis HIT  file:3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f:page:4
+2026-04-08 15:37:44,171 - services.redis_client - DEBUG - [redis_client.py:96:get_page] - Redis HIT  file:3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f:page:5
+2026-04-08 15:37:44,172 - services.redis_client - DEBUG - [redis_client.py:96:get_page] - Redis HIT  file:3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f:page:6
+2026-04-08 15:37:44,174 - services.redis_client - DEBUG - [redis_client.py:96:get_page] - Redis HIT  file:3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f:page:7
+2026-04-08 15:37:44,175 - services.redis_client - DEBUG - [redis_client.py:96:get_page] - Redis HIT  file:3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f:page:8
+2026-04-08 15:37:44,176 - services.redis_client - DEBUG - [redis_client.py:96:get_page] - Redis HIT  file:3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f:page:9
+2026-04-08 15:37:44,177 - services.redis_client - DEBUG - [redis_client.py:96:get_page] - Redis HIT  file:3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f:page:10
+2026-04-08 15:37:44,178 - services.redis_client - DEBUG - [redis_client.py:96:get_page] - Redis HIT  file:3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f:page:11
+2026-04-08 15:37:44,180 - services.redis_client - DEBUG - [redis_client.py:123:get_all_pages] - Redis: fetched 11 pages for file 3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f
+2026-04-08 15:37:44,180 - routers.spatial_sort - INFO - [spatial_sort.py:63:sort_layout] - Fetched 11 pages from Redis for file 3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f.
+2026-04-08 15:37:44,181 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:85:process_spatial_sort] - Starting process_spatial_sort.
+2026-04-08 15:37:44,182 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:115:process_spatial_sort] - Calculated thresholds - Vertical: 16.14, Horizontal: 18.38
+2026-04-08 15:37:44,182 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:127:process_spatial_sort] - Detected page layout: single column
+2026-04-08 15:37:44,184 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:141:process_spatial_sort] - Finished spatial sorting for page. Processed 1 regions.
+2026-04-08 15:37:44,184 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:115:process_spatial_sort] - Calculated thresholds - Vertical: 11.68, Horizontal: 10.54
+2026-04-08 15:37:44,185 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:127:process_spatial_sort] - Detected page layout: single column
+2026-04-08 15:37:44,185 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 0 with 2 boxes
+2026-04-08 15:37:44,186 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 0] Chose Horizontal Cut with gap: 13.00 (Threshold: 10.54)
+2026-04-08 15:37:44,186 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:141:process_spatial_sort] - Finished spatial sorting for page. Processed 2 regions.
+2026-04-08 15:37:44,186 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:115:process_spatial_sort] - Calculated thresholds - Vertical: 12.60, Horizontal: 7.53
+2026-04-08 15:37:44,186 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:127:process_spatial_sort] - Detected page layout: single column
+2026-04-08 15:37:44,187 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 0 with 2 boxes
+2026-04-08 15:37:44,187 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 0] Chose Horizontal Cut with gap: 52.00 (Threshold: 7.53)
+2026-04-08 15:37:44,188 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:141:process_spatial_sort] - Finished spatial sorting for page. Processed 2 regions.
+2026-04-08 15:37:44,188 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:115:process_spatial_sort] - Calculated thresholds - Vertical: 15.79, Horizontal: 19.63
+2026-04-08 15:37:44,189 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:127:process_spatial_sort] - Detected page layout: single column
+2026-04-08 15:37:44,189 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:141:process_spatial_sort] - Finished spatial sorting for page. Processed 1 regions.
+2026-04-08 15:37:44,190 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:115:process_spatial_sort] - Calculated thresholds - Vertical: 17.50, Horizontal: 17.05
+2026-04-08 15:37:44,190 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:127:process_spatial_sort] - Detected page layout: 2 col
+2026-04-08 15:37:44,191 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 0 with 12 boxes
+2026-04-08 15:37:44,191 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 0] Chose Horizontal Cut with gap: 59.00 (Threshold: 17.05)
+2026-04-08 15:37:44,192 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 1 with 7 boxes
+2026-04-08 15:37:44,192 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 1 with 5 boxes
+2026-04-08 15:37:44,192 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:46:recursive_xy_cut] - [Depth 1] Chose Vertical Cut with gap: 65.00 (Threshold: 17.50)
+2026-04-08 15:37:44,192 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 2 with 2 boxes
+2026-04-08 15:37:44,192 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 2 with 3 boxes
+2026-04-08 15:37:44,193 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:141:process_spatial_sort] - Finished spatial sorting for page. Processed 12 regions.
+2026-04-08 15:37:44,194 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:115:process_spatial_sort] - Calculated thresholds - Vertical: 17.36, Horizontal: 25.04
+2026-04-08 15:37:44,194 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:127:process_spatial_sort] - Detected page layout: 2 col
+2026-04-08 15:37:44,195 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 0 with 12 boxes
+2026-04-08 15:37:44,195 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:141:process_spatial_sort] - Finished spatial sorting for page. Processed 12 regions.
+2026-04-08 15:37:44,196 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:115:process_spatial_sort] - Calculated thresholds - Vertical: 17.86, Horizontal: 24.82
+2026-04-08 15:37:44,196 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:127:process_spatial_sort] - Detected page layout: single column
+2026-04-08 15:37:44,196 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 0 with 6 boxes
+2026-04-08 15:37:44,197 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 0] Chose Horizontal Cut with gap: 59.00 (Threshold: 24.82)
+2026-04-08 15:37:44,197 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 1 with 5 boxes
+2026-04-08 15:37:44,197 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:141:process_spatial_sort] - Finished spatial sorting for page. Processed 6 regions.
+2026-04-08 15:37:44,198 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:115:process_spatial_sort] - Calculated thresholds - Vertical: 17.86, Horizontal: 24.48
+2026-04-08 15:37:44,198 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:127:process_spatial_sort] - Detected page layout: single column
+2026-04-08 15:37:44,200 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 0 with 8 boxes
+2026-04-08 15:37:44,201 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 0] Chose Horizontal Cut with gap: 60.00 (Threshold: 24.48)
+2026-04-08 15:37:44,201 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 1 with 7 boxes
+2026-04-08 15:37:44,201 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 1] Chose Horizontal Cut with gap: 55.00 (Threshold: 24.48)
+2026-04-08 15:37:44,203 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 2 with 4 boxes
+2026-04-08 15:37:44,204 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 2] Chose Horizontal Cut with gap: 39.00 (Threshold: 24.48)
+2026-04-08 15:37:44,204 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 3 with 3 boxes
+2026-04-08 15:37:44,204 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 2 with 3 boxes
+2026-04-08 15:37:44,205 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 2] Chose Horizontal Cut with gap: 38.00 (Threshold: 24.48)
+2026-04-08 15:37:44,205 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 3 with 2 boxes
+2026-04-08 15:37:44,206 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 3] Chose Horizontal Cut with gap: 37.00 (Threshold: 24.48)
+2026-04-08 15:37:44,207 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:141:process_spatial_sort] - Finished spatial sorting for page. Processed 8 regions.
+2026-04-08 15:37:44,207 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:115:process_spatial_sort] - Calculated thresholds - Vertical: 17.23, Horizontal: 24.36
+2026-04-08 15:37:44,207 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:127:process_spatial_sort] - Detected page layout: single column
+2026-04-08 15:37:44,209 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 0 with 5 boxes
+2026-04-08 15:37:44,209 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 0] Chose Horizontal Cut with gap: 64.00 (Threshold: 24.36)
+2026-04-08 15:37:44,210 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 1 with 4 boxes
+2026-04-08 15:37:44,210 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 1] Chose Horizontal Cut with gap: 46.00 (Threshold: 24.36)
+2026-04-08 15:37:44,211 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 2 with 3 boxes
+2026-04-08 15:37:44,211 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 2] Chose Horizontal Cut with gap: 29.00 (Threshold: 24.36)
+2026-04-08 15:37:44,211 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 3 with 2 boxes
+2026-04-08 15:37:44,212 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:141:process_spatial_sort] - Finished spatial sorting for page. Processed 5 regions.
+2026-04-08 15:37:44,213 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:115:process_spatial_sort] - Calculated thresholds - Vertical: 15.45, Horizontal: 24.34
+2026-04-08 15:37:44,214 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:127:process_spatial_sort] - Detected page layout: single column
+2026-04-08 15:37:44,214 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 0 with 5 boxes
+2026-04-08 15:37:44,214 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 0] Chose Horizontal Cut with gap: 44.00 (Threshold: 24.34)
+2026-04-08 15:37:44,218 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 1 with 4 boxes
+2026-04-08 15:37:44,218 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:141:process_spatial_sort] - Finished spatial sorting for page. Processed 5 regions.
+2026-04-08 15:37:44,219 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:115:process_spatial_sort] - Calculated thresholds - Vertical: 17.86, Horizontal: 25.24
+2026-04-08 15:37:44,219 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:127:process_spatial_sort] - Detected page layout: single column
+2026-04-08 15:37:44,221 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 0 with 5 boxes
+2026-04-08 15:37:44,221 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 0] Chose Horizontal Cut with gap: 99.00 (Threshold: 25.24)
+2026-04-08 15:37:44,221 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 1 with 4 boxes
+2026-04-08 15:37:44,221 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:46:recursive_xy_cut] - [Depth 1] Chose Vertical Cut with gap: 47.00 (Threshold: 17.86)
+2026-04-08 15:37:44,222 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 2 with 3 boxes
+2026-04-08 15:37:44,222 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:70:recursive_xy_cut] - [Depth 2] Chose Horizontal Cut with gap: 69.00 (Threshold: 25.24)
+2026-04-08 15:37:44,222 - services.spatial_sort_engine - DEBUG - [spatial_sort_engine.py:13:recursive_xy_cut] - Entered recursive_xy_cut at depth 3 with 2 boxes
+2026-04-08 15:37:44,223 - services.spatial_sort_engine - INFO - [spatial_sort_engine.py:141:process_spatial_sort] - Finished spatial sorting for page. Processed 5 regions.
+2026-04-08 15:37:44,228 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f:page:1  (TTL=3600s)
+2026-04-08 15:37:44,230 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f:page:2  (TTL=3600s)
+2026-04-08 15:37:44,235 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f:page:3  (TTL=3600s)
+2026-04-08 15:37:44,240 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f:page:4  (TTL=3600s)
+2026-04-08 15:37:44,244 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f:page:5  (TTL=3600s)
+2026-04-08 15:37:44,248 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f:page:6  (TTL=3600s)
+2026-04-08 15:37:44,256 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f:page:7  (TTL=3600s)
+2026-04-08 15:37:44,261 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f:page:8  (TTL=3600s)
+2026-04-08 15:37:44,267 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f:page:9  (TTL=3600s)
+2026-04-08 15:37:44,272 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f:page:10  (TTL=3600s)
+2026-04-08 15:37:44,276 - services.redis_client - DEBUG - [redis_client.py:75:set_page] - Redis SET  file:3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f:page:11  (TTL=3600s)
+2026-04-08 15:37:44,276 - routers.spatial_sort - INFO - [spatial_sort.py:80:sort_layout] - Updated sorted pages in Redis for file 3420e8e1-b8e6-4edf-b4ed-5fd371c71a5f.
+2026-04-08 15:37:44,277 - routers.spatial_sort - INFO - [spatial_sort.py:85:sort_layout] - Layout sort completed successfully.
+2026-04-08 15:37:44,284 - main - INFO - [main.py:35:log_requests] - Completed: 200 in 162.09ms

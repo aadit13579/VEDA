@@ -449,3 +449,18 @@ def describe_image(
         "context_text": context_text,
         "gemini_response": gemini_text,
     }
+
+
+def extract_text_with_gemini(full_image: np.ndarray, bbox: List[int]) -> str:
+    """
+    Fallback OCR using Gemini 1.5 Flash when Tesseract is missing.
+    """
+    try:
+        pil_image = crop_and_preprocess(full_image, bbox)
+        prompt = "Extract all readable text from this image exactly as written. Only return the extracted text, no commentary. If there's no text, return nothing."
+        response = _model.generate_content([prompt, pil_image])
+        return response.text.strip()
+    except Exception as e:
+        logger.error(f"Gemini OCR fallback failed: {e}")
+        return ""
+

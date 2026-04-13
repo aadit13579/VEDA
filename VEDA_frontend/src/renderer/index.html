@@ -5,12 +5,12 @@
     <title>VEDA — Visual Engine for Document Accessibility</title>
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; media-src 'self' blob:; connect-src 'self' http://localhost:*"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; media-src 'self' blob: mediastream:; connect-src 'self' http://localhost:* https://www.google.com https://*.googleapis.com https://*.gstatic.com wss://*.google.com"
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
       rel="stylesheet"
     />
     <link href="./assets/main.css" type="text/css" rel="stylesheet" />
@@ -18,102 +18,162 @@
 
   <body class="bg-veda-bg text-veda-text font-['Inter',sans-serif] min-h-screen flex items-center justify-center overflow-hidden select-none">
 
-    <!-- Background gradient orbs -->
+    <!-- Animated background gradient orbs -->
     <div class="fixed inset-0 pointer-events-none overflow-hidden">
-      <div class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl"></div>
-      <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl"></div>
+      <div class="absolute -top-48 -left-48 w-[500px] h-[500px] bg-purple-700/8 rounded-full blur-3xl orb-animate"></div>
+      <div class="absolute -bottom-48 -right-48 w-[500px] h-[500px] bg-indigo-600/8 rounded-full blur-3xl orb-animate-reverse"></div>
+      <div class="absolute top-1/3 left-1/2 -translate-x-1/2 w-[300px] h-[300px] bg-pink-600/5 rounded-full blur-3xl orb-animate"></div>
     </div>
 
     <!-- Main Container -->
-    <div id="app" class="relative z-10 w-full max-w-2xl mx-auto px-6 py-10">
+    <div id="app" class="relative z-10 w-full max-w-5xl mx-auto px-6 py-8 flex flex-col max-h-screen">
 
       <!-- Header -->
-      <div class="text-center mb-10">
-        <h1 class="text-5xl font-extrabold tracking-tight">
-          <span class="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+      <div class="text-center mb-6 shrink-0">
+        <h1 class="text-5xl font-black tracking-tight">
+          <span class="gradient-text">
             VEDA
           </span>
         </h1>
-        <p class="mt-2 text-veda-text-muted text-sm tracking-wide">
+        <p class="mt-2 text-veda-text-muted/70 text-sm tracking-widest uppercase">
           Visual Engine for Document Accessibility
         </p>
       </div>
 
-      <!-- Upload Zone -->
-      <div
-        id="uploadZone"
-        class="group relative border-2 border-dashed border-veda-border rounded-2xl p-10 text-center cursor-pointer transition-all duration-300 hover:border-veda-accent hover:bg-veda-surface/50 mb-8"
-      >
-        <!-- Upload Icon -->
-        <div class="animate-float mb-4">
-          <svg class="mx-auto w-14 h-14 text-veda-text-muted group-hover:text-veda-accent transition-colors duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.338-2.32 3 3 0 013.182 5.595H6.75z" />
-          </svg>
+      <!-- ═══════════════════════════════════════════════ -->
+      <!-- PHASE 1: Upload + Options (visible initially)  -->
+      <!-- ═══════════════════════════════════════════════ -->
+      <div id="phaseUpload" class="shrink-0">
+
+        <!-- Upload Zone -->
+        <div
+          id="uploadZone"
+          class="upload-glow glass-card glass-card-hover group relative border border-transparent rounded-2xl p-10 text-center cursor-pointer transition-all duration-400 hover:border-purple-500/20 mb-6"
+        >
+          <div class="animate-float mb-4">
+            <svg class="mx-auto w-14 h-14 text-veda-text-muted/50 group-hover:text-purple-400 transition-colors duration-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.338-2.32 3 3 0 013.182 5.595H6.75z" />
+            </svg>
+          </div>
+          <p class="text-lg font-semibold text-veda-text-muted/80 group-hover:text-veda-text transition-colors duration-300">
+            Upload Document
+          </p>
+          <p class="text-xs text-veda-text-muted/40 mt-1.5 tracking-wide">
+            PDF, PNG, JPG, Word, PPT — Click to browse
+          </p>
+          <!-- File name badge -->
+          <div id="fileBadge" class="mt-5 hidden">
+            <span class="inline-flex items-center gap-2 bg-purple-500/10 border border-purple-500/20 rounded-lg px-4 py-2 text-sm text-purple-300">
+              <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+              </svg>
+              <span id="fileNameText" class="truncate"></span>
+            </span>
+          </div>
         </div>
-        <p class="text-lg font-semibold text-veda-text-muted group-hover:text-veda-text transition-colors duration-300">
-          Upload Documents
-        </p>
-        <p class="text-xs text-veda-text-muted/60 mt-1">
-          PDF, PNG, JPG, TIFF — Click to browse
-        </p>
 
-        <!-- File list (shown after upload) -->
-        <div id="fileList" class="mt-5 space-y-2 hidden"></div>
-      </div>
+        <!-- Options Row (hidden until file is selected) -->
+        <div id="optionsRow" class="hidden flex items-center justify-center gap-6 mb-6">
 
-      <!-- Mic + Start Row -->
-      <div class="flex items-center justify-center gap-8">
-
-        <!-- Mic Button -->
-        <div class="flex flex-col items-center gap-2">
-          <div class="relative">
-            <!-- Pulse ring (visible when recording) -->
-            <div id="micPulse" class="absolute inset-0 rounded-full bg-red-500/40 hidden animate-pulse-ring"></div>
-            <button
-              id="micBtn"
-              class="relative w-16 h-16 rounded-full bg-veda-surface border-2 border-veda-border flex items-center justify-center transition-all duration-300 hover:border-veda-accent hover:bg-veda-surface-hover hover:scale-105 active:scale-95"
-            >
-              <svg id="micIcon" class="w-7 h-7 text-veda-text-muted transition-colors duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <!-- Option A: Voice command -->
+          <button
+            id="voiceBtn"
+            class="group/btn glass-card flex flex-col items-center gap-3 px-7 py-5 rounded-2xl transition-all duration-300 hover:border-purple-500/30 hover:bg-purple-500/5 hover:scale-105 active:scale-95"
+          >
+            <div class="relative">
+              <div id="voicePulse" class="absolute inset-0 rounded-full bg-purple-500/40 hidden animate-pulse-ring"></div>
+              <svg class="relative w-8 h-8 text-veda-text-muted/60 group-hover/btn:text-purple-400 transition-colors duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
               </svg>
-            </button>
-          </div>
-          <span id="micLabel" class="text-xs text-veda-text-muted">Record Voice</span>
-        </div>
+            </div>
+            <span id="voiceLabel" class="text-xs text-veda-text-muted/70 font-medium">Speak Destination</span>
+            <span class="text-[10px] text-veda-text-muted/30">"Go to page 5"</span>
+          </button>
 
-        <!-- Start Button -->
-        <button
-          id="startBtn"
-          class="relative px-10 py-4 rounded-xl font-semibold text-white text-lg overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-indigo-500/25 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
-        >
-          <!-- Gradient background -->
-          <div class="absolute inset-0 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-xl"></div>
-          <!-- Shimmer effect -->
-          <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full hover:translate-x-full transition-transform duration-700"></div>
-          <span class="relative z-10 flex items-center gap-2">
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <!-- Option B: Start from Page 1 -->
+          <button
+            id="startBtn"
+            class="relative group/btn flex flex-col items-center gap-3 px-9 py-5 rounded-2xl overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-purple-500/20 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+          >
+            <div class="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 rounded-2xl"></div>
+            <div class="absolute inset-[1px] bg-gradient-to-br from-indigo-600/90 via-purple-600/90 to-pink-600/90 rounded-2xl"></div>
+            <svg class="relative z-10 w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
             </svg>
-            Start Processing
-          </span>
-        </button>
+            <span class="relative z-10 text-xs text-white/90 font-semibold tracking-wide">Start from Page 1</span>
+          </button>
+
+        </div>
+
+        <!-- Voice transcript feedback -->
+        <div id="voiceFeedback" class="hidden text-center mb-4">
+          <p class="text-sm text-purple-400 font-medium">
+            <span id="voiceTranscript"></span>
+          </p>
+          <p id="parsedPage" class="text-xs text-veda-text-muted mt-1"></p>
+        </div>
+
       </div>
 
-      <!-- Progress Bar -->
-      <div id="progressContainer" class="mt-8 hidden">
-        <div class="w-full bg-veda-surface rounded-full h-2.5 overflow-hidden">
+      <!-- ═══════════════════════════════════════════════ -->
+      <!-- Progress Bar (visible during processing)       -->
+      <!-- ═══════════════════════════════════════════════ -->
+      <div id="progressContainer" class="mt-2 mb-4 hidden shrink-0">
+        <div class="w-full bg-veda-surface/50 rounded-full h-2 overflow-hidden backdrop-blur-sm">
           <div
             id="progressFill"
             class="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full transition-all duration-500 ease-out"
             style="width: 0%"
           ></div>
         </div>
-        <p id="progressText" class="text-xs text-veda-text-muted mt-2 text-center"></p>
+        <p id="progressText" class="text-xs text-veda-text-muted/60 mt-2.5 text-center tracking-wide"></p>
       </div>
 
       <!-- Status Bar -->
-      <div id="statusBar" class="mt-4 text-center">
+      <div id="statusBar" class="text-center shrink-0">
         <p id="statusText" class="text-sm text-veda-text-muted/60"></p>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════ -->
+      <!-- PHASE 2: Results + TTS Controls                -->
+      <!-- ═══════════════════════════════════════════════ -->
+      <div id="phaseResults" class="hidden flex flex-col mt-4 min-h-0 flex-1">
+
+        <!-- TTS Controls -->
+        <div id="ttsControls" class="glass-card flex items-center justify-center gap-4 mb-4 shrink-0 rounded-xl px-5 py-3">
+          <button id="ttsPlayBtn" class="tts-control-btn w-10 h-10 rounded-full border border-green-500/20 flex items-center justify-center hover:border-green-500/50 hover:bg-green-500/10" title="Play">
+            <svg class="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          </button>
+          <button id="ttsPauseBtn" class="tts-control-btn w-10 h-10 rounded-full border border-yellow-500/20 flex items-center justify-center hover:border-yellow-500/50 hover:bg-yellow-500/10 hidden" title="Pause">
+            <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+          </button>
+          <button id="ttsResumeBtn" class="tts-control-btn w-10 h-10 rounded-full border border-green-500/20 flex items-center justify-center hover:border-green-500/50 hover:bg-green-500/10 hidden" title="Resume">
+            <svg class="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          </button>
+          <button id="ttsStopBtn" class="tts-control-btn w-10 h-10 rounded-full border border-red-500/20 flex items-center justify-center hover:border-red-500/50 hover:bg-red-500/10" title="Stop">
+            <svg class="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
+          </button>
+
+          <!-- Divider -->
+          <div class="w-px h-6 bg-veda-border/50 mx-1"></div>
+
+          <!-- TTS Audio Visualizer -->
+          <div id="ttsVisualizer" class="tts-visualizer">
+            <div class="tts-bar"></div>
+            <div class="tts-bar"></div>
+            <div class="tts-bar"></div>
+            <div class="tts-bar"></div>
+            <div class="tts-bar"></div>
+          </div>
+
+          <span id="ttsStatus" class="text-xs text-veda-text-muted/60 ml-1 tracking-wide">Ready</span>
+        </div>
+
+        <!-- Results Panel (scrollable) -->
+        <div id="resultsPanel" class="flex-1 overflow-y-auto rounded-xl glass-card p-6 results-scroll min-h-[60vh]">
+          <!-- Pages will be rendered here dynamically -->
+        </div>
+
       </div>
 
     </div>

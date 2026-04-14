@@ -509,7 +509,7 @@ async def _run_pipeline_background(
 
             output_filename = f"{file_id}_page_{page_num}.jpg"
             output_path = os.path.join(DEBUG_DIR, output_filename)
-            cv2.imwrite(output_path, img)
+            draw_layout_on_image(img, regions, output_path)
 
             page_result = {
                 "page": page_num,

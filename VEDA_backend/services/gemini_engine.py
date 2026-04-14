@@ -36,7 +36,6 @@ if not _api_key:
 else:
     genai.configure(api_key=_api_key)
     logger.info("Gemini API configured successfully.")
-
 # Model singleton — gemini-2.0-flash for speed + vision
 _model = genai.GenerativeModel("gemini-2.5-flash")
 

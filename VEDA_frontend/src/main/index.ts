@@ -59,8 +59,8 @@ app.whenReady().then(() => {
     return result.filePaths
   })
 
-  // ── IPC: Upload file to backend ──
-  ipcMain.handle('upload-file', async (_event, filePath: string) => {
+  // ── IPC: Run Document Pipeline ──
+  ipcMain.handle('run-pipeline', async (_event, filePath: string, startPage: number = 1) => {
     try {
       const fileName = path.basename(filePath)
       const fileBuffer = fs.readFileSync(filePath)
@@ -70,60 +70,30 @@ app.whenReady().then(() => {
       const blob = new Blob([fileBuffer])
       formData.append('file', blob, fileName)
 
-      const response = await fetch(`${BACKEND_URL}/api/v1/upload`, {
+      const url = new URL(`${BACKEND_URL}/api/v1/pipeline`)
+      url.searchParams.append('start_page', startPage.toString())
+
+      const response = await fetch(url.toString(), {
         method: 'POST',
         body: formData
       })
 
       if (!response.ok) {
-        const errorText = await response.text()
-        throw new Error(`Upload failed (${response.status}): ${errorText}`)
+        let errorText = await response.text()
+        // Try parsing JSON error for better message
+        try {
+          const parsed = JSON.parse(errorText)
+          if (parsed.detail) {
+            errorText = typeof parsed.detail === 'string' ? parsed.detail : JSON.stringify(parsed.detail)
+          }
+        } catch { }
+        throw new Error(`Pipeline failed (${response.status}): ${errorText}`)
       }
 
       return await response.json()
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error)
-      throw new Error(`Upload error: ${message}`)
-    }
-  })
-
-  // ── IPC: Run layout analysis ──
-  ipcMain.handle('analyze-layout', async (_event, fileId: string) => {
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/v1/analyze_layout/${fileId}`, {
-        method: 'POST'
-      })
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        throw new Error(`Layout analysis failed (${response.status}): ${errorText}`)
-      }
-
-      return await response.json()
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error)
-      throw new Error(`Layout analysis error: ${message}`)
-    }
-  })
-
-  // ── IPC: Run spatial sort ──
-  ipcMain.handle('spatial-sort', async (_event, fileId: string) => {
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/v1/layout/sort`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ file_id: fileId })
-      })
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        throw new Error(`Spatial sort failed (${response.status}): ${errorText}`)
-      }
-
-      return await response.json()
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error)
-      throw new Error(`Spatial sort error: ${message}`)
+      throw new Error(`Pipeline error: ${message}`)
     }
   })
 

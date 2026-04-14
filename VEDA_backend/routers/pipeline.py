@@ -1,17 +1,23 @@
 """
-VEDA Pipeline Router.
+VEDA Streaming Pipeline Router.
 
 Orchestrates the full document-processing pipeline by calling the same
 service functions used by the individual API routers — no logic is duplicated.
 
-Flow (per request):
-  1. Upload & Identify    — ingest logic (reused from routers.ingest helpers)
-  2. Layout Analysis      — page-by-page YOLO via services.layout_engine
-  3. Spatial Sort         — XY-Cut via services.spatial_sort_engine
-  4. OCR / Gemini         — PARALLEL per page:
-                            · GEMINI_LABELS  → gemini_engine.describe_image
-                            · everything else → OCR (PyMuPDF → Tesseract → Gemini fallback)
-  5. Finalize             — write JSON to disk, clean Redis
+Architecture:
+  POST /pipeline/start       — upload, classify, launch background task.
+  GET  /pipeline/stream/{id} — SSE stream; yields page_ready / error / complete.
+
+Per-page flow (inside background task):
+  1. Layout Analysis   — YOLO via services.layout_engine
+  2. Spatial Sort       — XY-Cut via services.spatial_sort_engine
+  3. OCR / Gemini       — PARALLEL per page:
+                          · GEMINI_LABELS  → gemini_engine.describe_image
+                          · everything else → OCR (PyMuPDF → Tesseract → Gemini fallback)
+  4. Store in Redis + push page_ready event to SSE queue
+
+After all pages:
+  5. Finalize           — write JSON to disk, clean Redis, push complete event.
 
 Rollback:
   Any un-caught exception triggers _cleanup(), which removes the uploaded
@@ -44,6 +50,7 @@ import filetype
 import fitz
 import numpy as np
 from fastapi import APIRouter, File, HTTPException, Query, UploadFile
+from fastapi.responses import StreamingResponse
 
 # ── Service imports (direct calls — no self-HTTP) ────────────────────────────
 from services.layout_engine import analyze_layout, draw_layout_on_image, pdf_to_images
@@ -97,6 +104,19 @@ _EXECUTOR = ThreadPoolExecutor(max_workers=MAX_WORKERS)
 logger.info(
     f"Pipeline thread pool initialised — CPUs={_CPU_COUNT}, MAX_WORKERS={MAX_WORKERS}"
 )
+
+# ── Active pipeline queues (file_id ➜ asyncio.Queue) ─────────────────────────
+# Filled by background tasks, consumed by the SSE endpoint.
+
+_active_pipelines: dict[str, asyncio.Queue] = {}
+
+
+# ── SSE event helper ─────────────────────────────────────────────────────────
+
+def _sse_event(event_type: str, data: dict) -> str:
+    """Format a single SSE frame: `event:` + `data:` lines + blank line."""
+    payload = json.dumps(data, ensure_ascii=False)
+    return f"event: {event_type}\ndata: {payload}\n\n"
 
 
 # ── Rollback helper ───────────────────────────────────────────────────────────
@@ -449,123 +469,47 @@ async def _process_page(
     )
 
 
-# ── Pipeline Endpoint ─────────────────────────────────────────────────────────
+# ── Background pipeline task ─────────────────────────────────────────────────
 
-@router.post("/pipeline")
-async def run_pipeline(
-    file: UploadFile = File(...),
-    start_page: int = Query(1, ge=1, description="1-indexed page to start from"),
-) -> dict:
+async def _run_pipeline_background(
+    file_id: str,
+    file_path: str,
+    category: str,
+    start_page: int,
+    total_pages: int,
+    images: list,
+    queue: asyncio.Queue,
+) -> None:
     """
-    Run the full VEDA document-processing pipeline on an uploaded file.
+    Background coroutine that processes pages one-by-one and pushes SSE
+    events into *queue*.
 
-    Steps:
-      1. Upload & Identify
-      2. Layout Analysis  (YOLO, page-by-page, from start_page)
-      3. Spatial Sort     (XY-Cut reading-order)
-      4. OCR & Description (parallel per page: Gemini for visuals, OCR for text)
-      5. Finalize         (write JSON to disk, clean Redis)
-
-    On failure, all artefacts are rolled back automatically.
+    Per page:  Layout → Spatial Sort → OCR (parallel regions) → page_ready event.
+    After all: Finalize → complete event.
     """
     pipeline_start = time.time()
-    file_id: str | None = None
-    file_path: str | None = None
-    steps_log: list[dict] = []
-    step: int = 0
-    step_name: str = "Init"
-
     loop = asyncio.get_event_loop()
+    counters: dict[str, int] = {"ocr": 0, "gemini": 0, "pymupdf": 0}
+    lock = threading.Lock()
+    pages_processed = 0
 
     try:
-        # ── STEP 1: Upload & Identify ─────────────────────────────────────────
-        step = 1
-        step_name = "Upload & Identify"
-        logger.info(f"🔵 PIPELINE STEP {step}: {step_name} — STARTED")
-        step_start = time.time()
-
-        file_id = str(uuid.uuid4())
-        file_extension = os.path.splitext(file.filename)[1].lower()
-        file_path = os.path.join(STORAGE_DIR, f"{file_id}{file_extension}")
-
-        # Save to disk
-        with open(file_path, "wb") as buf:
-            shutil.copyfileobj(file.file, buf)
-        logger.info(
-            f"   [STEP 1] Saved to disk: {file_path} "
-            f"({os.path.getsize(file_path)} bytes)"
-        )
-
-        # Detect file type via magic bytes (reuses _classify_pdf from ingest.py)
-        kind = filetype.guess(file_path)
-        category = "UNKNOWN"
-        mime_type = "unknown/unknown"
-
-        if kind:
-            mime_type = kind.mime
-            logger.debug(f"   [STEP 1] Detected MIME: {mime_type}")
-            if mime_type.startswith("image/"):
-                category = "IMAGE"
-            elif mime_type == "application/pdf":
-                category = _classify_pdf(file_path)   # ← reused, not redefined
-            elif "word" in mime_type or "officedocument.wordprocessingml" in mime_type:
-                category = "OFFICE_WORD"
-            elif "presentation" in mime_type or "powerpoint" in mime_type:
-                category = "OFFICE_PPT"
-
-        if category == "UNKNOWN":
-            if file_extension in [".doc", ".docx"]:
-                category = "OFFICE_WORD"
-            elif file_extension in [".ppt", ".pptx"]:
-                category = "OFFICE_PPT"
-            elif file_extension in [".txt"]:
-                category = "TEXT_FILE"
-
-        step_time = (time.time() - step_start) * 1000
-        steps_log.append({
-            "step": step, "name": step_name,
-            "status": "success", "time_ms": round(step_time, 2),
-            "details": {"file_id": file_id, "category": category},
-        })
-        logger.info(
-            f"✅ PIPELINE STEP {step}: {step_name} — DONE in {step_time:.2f}ms "
-            f"(file_id={file_id}, category={category})"
-        )
-
-        # ── STEP 2: Layout Analysis ───────────────────────────────────────────
-        step = 2
-        step_name = "Layout Analysis"
-        logger.info(f"🔵 PIPELINE STEP {step}: {step_name} — STARTED")
-        step_start = time.time()
-
-        with open(file_path, "rb") as f:
-            file_bytes = f.read()
-        images = pdf_to_images(file_bytes)
-        total_pages = len(images)
-
-        logger.info(f"   [STEP 2] Total pages in document: {total_pages}")
-
-        if start_page > total_pages:
-            raise ValueError(
-                f"start_page={start_page} exceeds total pages ({total_pages})."
-            )
-
         pages_to_process = list(range(start_page - 1, total_pages))  # 0-indexed
-        layout_results: list[dict] = []
 
         for page_idx in pages_to_process:
-            img = images[page_idx]
             page_num = page_idx + 1  # 1-indexed
             page_t0 = time.time()
-            logger.info(
-                f"   [STEP 2] Page {page_num}/{total_pages} — running YOLO…"
-            )
 
+            # ── Layout Analysis (YOLO) for this page ─────────────────────────
+            logger.info(
+                f"   [STREAM] Page {page_num}/{total_pages} — running YOLO…"
+            )
+            img = images[page_idx]
             regions = analyze_layout(img)
 
             output_filename = f"{file_id}_page_{page_num}.jpg"
             output_path = os.path.join(DEBUG_DIR, output_filename)
-            draw_layout_on_image(img, regions, output_path)
+            cv2.imwrite(output_path, img)
 
             page_result = {
                 "page": page_num,
@@ -576,89 +520,27 @@ async def run_pipeline(
                 },
                 "debug_image_url": f"/api/v1/layout/debug_image/{output_filename}",
             }
-            layout_results.append(page_result)
             set_page(file_id, page_num, page_result)
 
             logger.info(
-                f"   [STEP 2] Page {page_num}/{total_pages} — "
+                f"   [STREAM] Page {page_num}/{total_pages} — "
                 f"{len(regions)} regions found "
-                f"({page_result['meta']['process_time_ms']}ms)"
+                f"({page_result['meta']['process_time_ms']}ms layout)"
             )
 
-        set_total_pages(file_id, total_pages)
-        logger.info(f"   [STEP 2] Cached {len(layout_results)} pages in Redis")
+            # ── Spatial Sort (XY-Cut) for this single page ───────────────────
+            sort_payload = {"layout_data": [page_result]}
+            ordered = process_spatial_sort(sort_payload)
+            sorted_page = ordered["layout_data"][0]
+            set_page(file_id, page_num, sorted_page)
 
-        step_time = (time.time() - step_start) * 1000
-        steps_log.append({
-            "step": step, "name": step_name,
-            "status": "success", "time_ms": round(step_time, 2),
-            "details": {
-                "total_pages": total_pages,
-                "pages_processed": len(pages_to_process),
-                "start_page": start_page,
-            },
-        })
-        logger.info(
-            f"✅ PIPELINE STEP {step}: {step_name} — DONE in {step_time:.2f}ms "
-            f"({len(pages_to_process)}/{total_pages} pages from page {start_page})"
-        )
+            logger.info(
+                f"   [STREAM] Page {page_num}/{total_pages} — spatial sort done"
+            )
 
-        # ── STEP 3: Spatial Sort ──────────────────────────────────────────────
-        step = 3
-        step_name = "Spatial Sort"
-        logger.info(f"🔵 PIPELINE STEP {step}: {step_name} — STARTED")
-        step_start = time.time()
-
-        pages_from_redis = get_all_pages(file_id)
-        if not pages_from_redis:
-            raise RuntimeError("No pages found in Redis after layout analysis.")
-        logger.info(
-            f"   [STEP 3] Fetched {len(pages_from_redis)} pages from Redis for sorting"
-        )
-
-        # Reuse process_spatial_sort directly (same function the spatial_sort router uses)
-        ordered_payload = process_spatial_sort({"layout_data": pages_from_redis})
-
-        for page_data in ordered_payload.get("layout_data", []):
-            page_num = page_data.get("page")
-            if page_num is not None:
-                set_page(file_id, page_num, page_data)
-                logger.debug(
-                    f"   [STEP 3] Wrote sorted page {page_num} back to Redis "
-                    f"({len(page_data.get('regions', []))} regions)"
-                )
-
-        step_time = (time.time() - step_start) * 1000
-        steps_log.append({
-            "step": step, "name": step_name,
-            "status": "success", "time_ms": round(step_time, 2),
-        })
-        logger.info(
-            f"✅ PIPELINE STEP {step}: {step_name} — DONE in {step_time:.2f}ms"
-        )
-
-        # ── STEP 4: Parallel OCR / Gemini ─────────────────────────────────────
-        step = 4
-        step_name = "OCR & Description (Parallel)"
-        logger.info(f"🔵 PIPELINE STEP {step}: {step_name} — STARTED")
-        logger.info(
-            f"   [STEP 4] Thread pool: MAX_WORKERS={MAX_WORKERS} (CPUs={_CPU_COUNT})"
-        )
-        step_start = time.time()
-
-        sorted_pages = get_all_pages(file_id)
-        logger.info(
-            f"   [STEP 4] Processing {len(sorted_pages)} pages — "
-            f"one page at a time, all regions in parallel within each page"
-        )
-
-        # Shared counters updated thread-safely across region coroutines
-        counters: dict[str, int] = {"ocr": 0, "gemini": 0, "pymupdf": 0}
-        lock = threading.Lock()
-
-        for page_data in sorted_pages:
+            # ── OCR / Gemini  (parallel within page) ─────────────────────────
             await _process_page(
-                page_data=page_data,
+                page_data=sorted_page,
                 file_id=file_id,
                 file_path=file_path,
                 counters=counters,
@@ -666,29 +548,32 @@ async def run_pipeline(
                 loop=loop,
             )
 
-        step_time = (time.time() - step_start) * 1000
-        steps_log.append({
-            "step": step, "name": step_name,
-            "status": "success", "time_ms": round(step_time, 2),
-            "details": {
-                "ocr_regions": counters["ocr"],
-                "gemini_regions": counters["gemini"],
-                "pymupdf_regions": counters["pymupdf"],
-                "max_workers": MAX_WORKERS,
-            },
-        })
-        logger.info(
-            f"✅ PIPELINE STEP {step}: {step_name} — DONE in {step_time:.2f}ms "
-            f"(OCR={counters['ocr']}, Gemini={counters['gemini']}, "
-            f"PyMuPDF={counters['pymupdf']})"
-        )
+            pages_processed += 1
+            page_elapsed = (time.time() - page_t0) * 1000
 
-        # ── STEP 5: Finalize ──────────────────────────────────────────────────
-        step = 5
-        step_name = "Finalize"
-        logger.info(f"🔵 PIPELINE STEP {step}: {step_name} — STARTED")
-        step_start = time.time()
+            # ── Push page_ready event into SSE queue ─────────────────────────
+            # Re-read from Redis to get the fully updated page
+            from services.redis_client import get_page
+            final_page_data = get_page(file_id, page_num) or sorted_page
 
+            await queue.put({
+                "type": "page_ready",
+                "data": {
+                    "page": page_num,
+                    "total_pages": total_pages,
+                    "pages_processed": pages_processed,
+                    "page_data": final_page_data,
+                    "page_time_ms": round(page_elapsed, 2),
+                },
+            })
+
+            logger.info(
+                f"✅ [STREAM] Page {page_num}/{total_pages} — READY "
+                f"in {page_elapsed:.1f}ms (pushed to SSE)"
+            )
+
+        # ── Finalize ─────────────────────────────────────────────────────────
+        set_total_pages(file_id, total_pages)
         final_pages = get_all_pages(file_id)
         if not final_pages:
             raise RuntimeError("No pages found in Redis for finalization.")
@@ -704,74 +589,187 @@ async def run_pipeline(
             json.dump(final_document, f, indent=2, ensure_ascii=False)
 
         logger.info(
-            f"   [STEP 5] Final JSON written to iceberg_storage: "
-            f"{os.path.abspath(output_path)} "
+            f"   [STREAM] Final JSON written: {os.path.abspath(output_path)} "
             f"({os.path.getsize(output_path)} bytes)"
         )
 
         deleted_count = delete_file_keys(file_id)
-        logger.info(f"   [STEP 5] Cleaned {deleted_count} Redis key(s)")
+        logger.info(f"   [STREAM] Cleaned {deleted_count} Redis key(s)")
 
-        step_time = (time.time() - step_start) * 1000
-        steps_log.append({
-            "step": step, "name": step_name,
-            "status": "success", "time_ms": round(step_time, 2),
-        })
-        logger.info(
-            f"✅ PIPELINE STEP {step}: {step_name} — DONE in {step_time:.2f}ms"
-        )
-
-        # ── SUCCESS ───────────────────────────────────────────────────────────
         total_time = (time.time() - pipeline_start) * 1000
+
+        await queue.put({
+            "type": "complete",
+            "data": {
+                "file_id": file_id,
+                "total_pages": total_pages,
+                "pages_processed": pages_processed,
+                "output_path": output_path,
+                "total_time_ms": round(total_time, 2),
+                "counters": counters,
+            },
+        })
+
         logger.info(
             f"🎉 PIPELINE COMPLETED SUCCESSFULLY in {total_time:.2f}ms "
             f"for file_id={file_id}"
         )
 
-        return {
-            "status": "success",
-            "file_id": file_id,
-            "filename": file.filename,
-            "category": category,
-            "total_pages": total_pages,
-            "start_page": start_page,
-            "pages_processed": len(pages_to_process),
-            "steps": steps_log,
-            "output_path": output_path,
-            "final_document": final_document,
-            "total_time_ms": round(total_time, 2),
-        }
-
     except Exception as exc:
-        # ── FAILURE — log, rollback, raise ───────────────────────────────────
         error_msg = traceback.format_exc()
         logger.error(
-            f"❌ PIPELINE STEP {step} ({step_name}) — FAILED\n"
-            f"   steps so far: {steps_log}\n"
-            f"{error_msg}"
+            f"❌ PIPELINE BACKGROUND TASK FAILED for file_id={file_id}\n{error_msg}"
         )
-        steps_log.append({
-            "step": step, "name": step_name,
-            "status": "failed", "error": str(exc),
+        _cleanup(file_id, file_path)
+
+        await queue.put({
+            "type": "error",
+            "data": {
+                "file_id": file_id,
+                "error": str(exc),
+                "pages_processed": pages_processed,
+            },
         })
 
-        if file_id:
-            _cleanup(file_id, file_path)
+    finally:
+        # Sentinel: signal the SSE generator to close
+        await queue.put(None)
+        # Clean up the pipeline reference after a short delay
+        # (give the SSE endpoint time to drain the queue)
+        await asyncio.sleep(2)
+        _active_pipelines.pop(file_id, None)
 
-        total_time = (time.time() - pipeline_start) * 1000
-        logger.error(
-            f"💀 PIPELINE ABORTED after {total_time:.2f}ms "
-            f"at step {step} ({step_name})"
-        )
 
+# ── Pipeline Start Endpoint ──────────────────────────────────────────────────
+
+@router.post("/pipeline/start")
+async def start_pipeline(
+    file: UploadFile = File(...),
+    start_page: int = Query(1, ge=1, description="1-indexed page to start from"),
+) -> dict:
+    """
+    Upload a document and kick off the processing pipeline in the background.
+
+    Returns immediately with a file_id that the client uses to connect
+    to the SSE stream at GET /pipeline/stream/{file_id}.
+    """
+    step_start = time.time()
+
+    # ── Upload & Identify ─────────────────────────────────────────────────────
+    file_id = str(uuid.uuid4())
+    file_extension = os.path.splitext(file.filename)[1].lower()
+    file_path = os.path.join(STORAGE_DIR, f"{file_id}{file_extension}")
+
+    with open(file_path, "wb") as buf:
+        shutil.copyfileobj(file.file, buf)
+    logger.info(
+        f"   [START] Saved to disk: {file_path} "
+        f"({os.path.getsize(file_path)} bytes)"
+    )
+
+    # Detect file type
+    kind = filetype.guess(file_path)
+    category = "UNKNOWN"
+    if kind:
+        mime_type = kind.mime
+        if mime_type.startswith("image/"):
+            category = "IMAGE"
+        elif mime_type == "application/pdf":
+            category = _classify_pdf(file_path)
+        elif "word" in mime_type or "officedocument.wordprocessingml" in mime_type:
+            category = "OFFICE_WORD"
+        elif "presentation" in mime_type or "powerpoint" in mime_type:
+            category = "OFFICE_PPT"
+
+    if category == "UNKNOWN":
+        if file_extension in [".doc", ".docx"]:
+            category = "OFFICE_WORD"
+        elif file_extension in [".ppt", ".pptx"]:
+            category = "OFFICE_PPT"
+        elif file_extension in [".txt"]:
+            category = "TEXT_FILE"
+
+    # Convert to images + count pages
+    with open(file_path, "rb") as f:
+        file_bytes = f.read()
+    images = pdf_to_images(file_bytes)
+    total_pages = len(images)
+
+    if start_page > total_pages:
+        _cleanup(file_id, file_path)
         raise HTTPException(
-            status_code=500,
-            detail={
-                "status": "failed",
-                "failed_at_step": step,
-                "failed_step_name": step_name,
-                "error": str(exc),
-                "steps": steps_log,
-                "total_time_ms": round(total_time, 2),
-            },
+            status_code=400,
+            detail=f"start_page={start_page} exceeds total pages ({total_pages}).",
         )
+
+    # Create the SSE queue and launch background task
+    queue: asyncio.Queue = asyncio.Queue()
+    _active_pipelines[file_id] = queue
+
+    asyncio.create_task(
+        _run_pipeline_background(
+            file_id=file_id,
+            file_path=file_path,
+            category=category,
+            start_page=start_page,
+            total_pages=total_pages,
+            images=images,
+            queue=queue,
+        )
+    )
+
+    elapsed = (time.time() - step_start) * 1000
+    logger.info(
+        f"🚀 PIPELINE STARTED — file_id={file_id}, category={category}, "
+        f"total_pages={total_pages}, start_page={start_page} "
+        f"(upload took {elapsed:.1f}ms)"
+    )
+
+    return {
+        "status": "started",
+        "file_id": file_id,
+        "filename": file.filename,
+        "category": category,
+        "total_pages": total_pages,
+        "start_page": start_page,
+    }
+
+
+# ── SSE Stream Endpoint ──────────────────────────────────────────────────────
+
+@router.get("/pipeline/stream/{file_id}")
+async def stream_pipeline(file_id: str):
+    """
+    Server-Sent Events stream for a running pipeline.
+
+    Events:
+      page_ready  — a page has been fully processed (layout + sort + OCR).
+      error       — processing failed.
+      complete    — all pages done, JSON finalized, Redis cleaned.
+    """
+    queue = _active_pipelines.get(file_id)
+    if queue is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No active pipeline found for file_id '{file_id}'. "
+                   f"Start one with POST /pipeline/start first.",
+        )
+
+    async def event_generator():
+        """Yield SSE frames from the pipeline queue until sentinel (None)."""
+        while True:
+            event = await queue.get()
+            if event is None:
+                # Sentinel — pipeline finished, close the stream
+                break
+            yield _sse_event(event["type"], event["data"])
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",  # Disable Nginx buffering if proxied
+        },
+    )

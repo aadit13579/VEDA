@@ -59,42 +59,61 @@ app.whenReady().then(() => {
     return result.filePaths
   })
 
-  // ── IPC: Run Document Pipeline ──
-  ipcMain.handle('run-pipeline', async (_event, filePath: string, startPage: number = 1) => {
-    try {
-      const fileName = path.basename(filePath)
-      const fileBuffer = fs.readFileSync(filePath)
+  // ── IPC: Start Pipeline (streaming) ──
+  // 1. Uploads file to POST /pipeline/start → gets file_id + total_pages
+  // 2. Connects to GET /pipeline/stream/{file_id} (SSE)
+  // 3. Forwards each SSE event to the renderer via webContents.send()
+  // 4. Returns the initial { file_id, total_pages, ... } to the renderer immediately
+  ipcMain.handle('start-pipeline', async (_event, filePath: string, startPage: number = 1) => {
+    const mainWindow = BrowserWindow.getAllWindows()[0]
+    if (!mainWindow) throw new Error('No main window found')
 
-      // Build multipart form data manually using fetch (Node 18+)
-      const formData = new FormData()
-      const blob = new Blob([fileBuffer])
-      formData.append('file', blob, fileName)
+    // ── Step 1: Upload file to /pipeline/start ──
+    const fileName = path.basename(filePath)
+    const fileBuffer = fs.readFileSync(filePath)
 
-      const url = new URL(`${BACKEND_URL}/api/v1/pipeline`)
-      url.searchParams.append('start_page', startPage.toString())
+    const formData = new FormData()
+    const blob = new Blob([fileBuffer])
+    formData.append('file', blob, fileName)
 
-      const response = await fetch(url.toString(), {
-        method: 'POST',
-        body: formData
-      })
+    const startUrl = new URL(`${BACKEND_URL}/api/v1/pipeline/start`)
+    startUrl.searchParams.append('start_page', startPage.toString())
 
-      if (!response.ok) {
-        let errorText = await response.text()
-        // Try parsing JSON error for better message
-        try {
-          const parsed = JSON.parse(errorText)
-          if (parsed.detail) {
-            errorText = typeof parsed.detail === 'string' ? parsed.detail : JSON.stringify(parsed.detail)
-          }
-        } catch { }
-        throw new Error(`Pipeline failed (${response.status}): ${errorText}`)
-      }
+    const startResponse = await fetch(startUrl.toString(), {
+      method: 'POST',
+      body: formData
+    })
 
-      return await response.json()
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error)
-      throw new Error(`Pipeline error: ${message}`)
+    if (!startResponse.ok) {
+      let errorText = await startResponse.text()
+      try {
+        const parsed = JSON.parse(errorText)
+        if (parsed.detail) {
+          errorText = typeof parsed.detail === 'string' ? parsed.detail : JSON.stringify(parsed.detail)
+        }
+      } catch { }
+      throw new Error(`Pipeline start failed (${startResponse.status}): ${errorText}`)
     }
+
+    const startResult = await startResponse.json()
+    const fileId = startResult.file_id
+
+    // ── Step 2: Connect to SSE stream in the background ──
+    // This runs async — we don't await it. Events are pushed to renderer.
+    connectToSSEStream(fileId, mainWindow).catch((err) => {
+      console.error('SSE stream error:', err)
+      mainWindow.webContents.send('pipeline-event', {
+        type: 'error',
+        data: {
+          file_id: fileId,
+          error: err instanceof Error ? err.message : String(err),
+          pages_processed: 0
+        }
+      })
+    })
+
+    // ── Step 3: Return immediately so renderer can set up listeners ──
+    return startResult
   })
 
   // ── IPC: Check backend health ──
@@ -119,3 +138,72 @@ app.on('window-all-closed', () => {
     app.quit()
   }
 })
+
+
+// ── SSE Stream Reader ──
+// Connects to the backend SSE endpoint and forwards parsed events to the renderer.
+async function connectToSSEStream(fileId: string, mainWindow: BrowserWindow): Promise<void> {
+  const streamUrl = `${BACKEND_URL}/api/v1/pipeline/stream/${fileId}`
+  console.log(`[SSE] Connecting to ${streamUrl}`)
+
+  const response = await fetch(streamUrl)
+
+  if (!response.ok) {
+    throw new Error(`SSE connection failed (${response.status})`)
+  }
+
+  if (!response.body) {
+    throw new Error('SSE response has no body')
+  }
+
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) {
+      console.log('[SSE] Stream closed by server')
+      break
+    }
+
+    buffer += decoder.decode(value, { stream: true })
+
+    // Parse SSE frames: each frame is "event: <type>\ndata: <json>\n\n"
+    const frames = buffer.split('\n\n')
+    // The last element is either empty or an incomplete frame
+    buffer = frames.pop() || ''
+
+    for (const frame of frames) {
+      if (!frame.trim()) continue
+
+      const lines = frame.split('\n')
+      let eventType = ''
+      let eventData = ''
+
+      for (const line of lines) {
+        if (line.startsWith('event: ')) {
+          eventType = line.slice(7).trim()
+        } else if (line.startsWith('data: ')) {
+          eventData = line.slice(6)
+        }
+      }
+
+      if (eventType && eventData) {
+        try {
+          const parsed = JSON.parse(eventData)
+          console.log(`[SSE] Event: ${eventType}`, eventType === 'page_ready'
+            ? `page ${parsed.page}/${parsed.total_pages}`
+            : '')
+
+          mainWindow.webContents.send('pipeline-event', {
+            type: eventType,
+            data: parsed
+          })
+        } catch (err) {
+          console.error('[SSE] Failed to parse event data:', eventData, err)
+        }
+      }
+    }
+  }
+}

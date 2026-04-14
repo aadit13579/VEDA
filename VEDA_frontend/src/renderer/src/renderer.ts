@@ -1,5 +1,5 @@
 // ── VEDA Renderer ──
-// Upload → Voice/Button start → Pipeline → Display results → Read aloud (TTS)
+// Upload → Voice/Button start → Pipeline (streaming) → Display results incrementally → Read aloud (TTS)
 
 export {} // make this file a module so declare global works
 
@@ -16,29 +16,48 @@ interface PipelineRegion {
 interface PipelinePage {
   page: number
   regions: PipelineRegion[]
+  debug_image_url?: string
 }
 
-interface PipelineResult {
+interface StartPipelineResult {
   status: string
   file_id: string
   filename: string
   category: string
   total_pages: number
   start_page: number
+}
+
+interface PageReadyEvent {
+  page: number
+  total_pages: number
   pages_processed: number
-  final_document: {
-    file_id: string
-    total_pages: number
-    pages: PipelinePage[]
-  }
-  steps: Array<{
-    step: number
-    name: string
-    status: string
-    time_ms: number
-    error?: string
-  }>
+  page_data: PipelinePage
+  page_time_ms: number
+}
+
+interface PipelineCompleteEvent {
+  file_id: string
+  total_pages: number
+  pages_processed: number
+  output_path: string
   total_time_ms: number
+  counters: {
+    ocr: number
+    gemini: number
+    pymupdf: number
+  }
+}
+
+interface PipelineErrorEvent {
+  file_id: string
+  error: string
+  pages_processed: number
+}
+
+interface PipelineEvent {
+  type: 'page_ready' | 'error' | 'complete'
+  data: PageReadyEvent | PipelineCompleteEvent | PipelineErrorEvent
 }
 
 // ── State ──
@@ -48,7 +67,6 @@ interface VedaState {
   startPage: number
   isProcessing: boolean
   isListening: boolean
-  pipelineResult: PipelineResult | null
   // TTS
   ttsUtterances: SpeechSynthesisUtterance[]
   ttsCurrentIndex: number
@@ -59,6 +77,8 @@ interface VedaState {
   audioChunks: Blob[]
   // Keep-alive timer
   ttsKeepAliveTimer: number | null
+  // Pipeline event listener cleanup
+  pipelineEventCleanup: (() => void) | null
 }
 
 const state: VedaState = {
@@ -67,14 +87,14 @@ const state: VedaState = {
   startPage: 1,
   isProcessing: false,
   isListening: false,
-  pipelineResult: null,
   ttsUtterances: [],
   ttsCurrentIndex: 0,
   ttsIsPaused: false,
   ttsIsSpeaking: false,
   mediaRecorder: null,
   audioChunks: [],
-  ttsKeepAliveTimer: null
+  ttsKeepAliveTimer: null,
+  pipelineEventCleanup: null
 }
 
 // ── Gemini labels (match backend) ──
@@ -88,9 +108,33 @@ const GEMINI_LABELS = new Set([
   'table_caption'
 ])
 
+// ── Theme Toggling ──
+function setupTheme(): void {
+  const toggleBtn = document.getElementById('themeToggleBtn')!
+  
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+  const savedTheme = localStorage.getItem('veda-theme')
+  const isDark = savedTheme === 'dark' || (!savedTheme && prefersDark)
+  
+  if (isDark) document.documentElement.setAttribute('data-theme', 'dark')
+  
+  toggleBtn.addEventListener('click', () => {
+    const currentTheme = document.documentElement.getAttribute('data-theme')
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark'
+    
+    if (newTheme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark')
+    } else {
+      document.documentElement.removeAttribute('data-theme')
+    }
+    localStorage.setItem('veda-theme', newTheme)
+  })
+}
+
 // ── Init ──
 function init(): void {
   window.addEventListener('DOMContentLoaded', () => {
+    setupTheme()
     setupUpload()
     setupVoice()
     setupStart()
@@ -362,7 +406,7 @@ function setupStart(): void {
 }
 
 // ══════════════════════════════════════
-//  RUN PIPELINE
+//  RUN PIPELINE  (Streaming)
 // ══════════════════════════════════════
 async function runPipeline(): Promise<void> {
   if (!state.filePath || state.isProcessing) return
@@ -370,11 +414,30 @@ async function runPipeline(): Promise<void> {
   state.isProcessing = true
   window.speechSynthesis.cancel()
 
+  // Reset TTS state for new pipeline run
+  state.ttsUtterances = []
+  state.ttsCurrentIndex = 0
+  state.ttsIsPaused = false
+  state.ttsIsSpeaking = false
+
   const startBtn = document.getElementById('startBtn')!
   const voiceBtn = document.getElementById('voiceBtn')!
   startBtn.setAttribute('disabled', 'true')
   voiceBtn.setAttribute('disabled', 'true')
   showProgress(true)
+
+  // Prepare results panel for incremental rendering
+  const phaseResults = document.getElementById('phaseResults')!
+  const resultsPanel = document.getElementById('resultsPanel')!
+  phaseResults.classList.remove('hidden')
+  resultsPanel.innerHTML = ''
+
+  // Reset document image viewer
+  const placeholder = document.getElementById('docImagePlaceholder')!
+  const viewer = document.getElementById('docImageViewer') as HTMLImageElement
+  placeholder.classList.remove('hidden')
+  viewer.classList.add('hidden')
+  viewer.src = ''
 
   // Start indeterminate progress bar + elapsed timer
   const progressFill = document.getElementById('progressFill')!
@@ -387,36 +450,35 @@ async function runPipeline(): Promise<void> {
     )
   }, 1000)
   setProgressText(`⏳ Processing "${state.fileName}" from page ${state.startPage}…`)
-  setStatus('Backend is running: Upload → Layout → Sort → OCR → Finalize', 'info')
+  setStatus('Starting pipeline: Upload → Layout → Sort → OCR (per page, streamed)', 'info')
 
   try {
-    const result: PipelineResult = await window.electron.ipcRenderer.invoke(
-      'run-pipeline',
+    // ── Set up SSE event listener BEFORE starting pipeline ──
+    // Clean up any previous listener
+    if (state.pipelineEventCleanup) {
+      state.pipelineEventCleanup()
+      state.pipelineEventCleanup = null
+    }
+
+    // Register listener for pipeline events from main process
+    const cleanup = window.electron.ipcRenderer.on('pipeline-event', (_event, pipelineEvent: PipelineEvent) => {
+      handlePipelineEvent(pipelineEvent, timerInterval, progressFill, startTime)
+    })
+    state.pipelineEventCleanup = cleanup
+
+    // ── Start the pipeline (returns immediately with file_id) ──
+    const startResult: StartPipelineResult = await window.electron.ipcRenderer.invoke(
+      'start-pipeline',
       state.filePath,
       state.startPage
     )
 
-    // Stop timer, switch to determinate bar
-    clearInterval(timerInterval)
-    progressFill.classList.remove('progress-indeterminate')
-
-    state.pipelineResult = result
-    setProgress(100, `✓ Done in ${(result.total_time_ms / 1000).toFixed(1)}s`)
+    console.log('Pipeline started:', startResult)
     setStatus(
-      `✓ Processed ${result.pages_processed} page(s) — reading aloud from page ${result.start_page}.`,
-      'success'
+      `Pipeline started — ${startResult.total_pages} page(s). Audio will begin as pages are ready…`,
+      'info'
     )
 
-    // Log step details
-    console.log('Pipeline result:', result)
-    for (const step of result.steps) {
-      console.log(`  Step ${step.step}: ${step.name} — ${step.status} (${step.time_ms}ms)`)
-    }
-
-    // Render results and start TTS
-    renderResults(result)
-    buildTTSQueue(result)
-    startTTS()
   } catch (err) {
     clearInterval(timerInterval)
     progressFill.classList.remove('progress-indeterminate')
@@ -424,75 +486,152 @@ async function runPipeline(): Promise<void> {
     const message = err instanceof Error ? err.message : String(err)
     setStatus(`✗ Pipeline failed: ${message}`, 'error')
     setProgress(0, 'Failed')
-    console.error('Pipeline error:', err)
-  } finally {
-    state.isProcessing = false
-    startBtn.removeAttribute('disabled')
-    voiceBtn.removeAttribute('disabled')
+    console.error('Pipeline start error:', err)
+
+    finishPipeline()
   }
 }
 
+
 // ══════════════════════════════════════
-//  RENDER RESULTS
+//  HANDLE STREAMING PIPELINE EVENTS
 // ══════════════════════════════════════
-function renderResults(result: PipelineResult): void {
-  const phaseResults = document.getElementById('phaseResults')!
-  const resultsPanel = document.getElementById('resultsPanel')!
+function handlePipelineEvent(
+  pipelineEvent: PipelineEvent,
+  timerInterval: ReturnType<typeof setInterval>,
+  progressFill: HTMLElement,
+  startTime: number
+): void {
+  switch (pipelineEvent.type) {
+    case 'page_ready': {
+      const data = pipelineEvent.data as PageReadyEvent
+      console.log(`Page ${data.page}/${data.total_pages} ready (${data.page_time_ms}ms)`)
 
-  phaseResults.classList.remove('hidden')
-  resultsPanel.innerHTML = ''
+      // Update progress bar
+      const percent = Math.round((data.pages_processed / data.total_pages) * 100)
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(0)
+      progressFill.classList.remove('progress-indeterminate')
+      setProgress(
+        percent,
+        `📄 Page ${data.page}/${data.total_pages} ready (${elapsed}s elapsed)`
+      )
 
-  const pages = result.final_document?.pages || []
+      // Render this page incrementally
+      renderPage(data.page_data)
 
-  if (pages.length === 0) {
-    resultsPanel.innerHTML =
-      '<p class="text-sm text-veda-text-muted text-center py-8">No content extracted.</p>'
-    return
-  }
+      // Instantiate the image preview immediately if it hasn't been set yet (first page hit)
+      const viewer = document.getElementById('docImageViewer') as HTMLImageElement
+      if (viewer.classList.contains('hidden')) {
+          const imageUrl = data.page_data.debug_image_url ? `http://localhost:8000${data.page_data.debug_image_url}` : ''
+          setCurrentDocumentImage(imageUrl)
+      }
 
-  for (const page of pages) {
-    const pageDiv = document.createElement('div')
-    pageDiv.className = 'page-block'
+      // Append to TTS queue and start speaking if not already
+      appendPageToTTSQueue(data.page_data)
+      if (!state.ttsIsSpeaking) {
+        startTTS()
+      }
 
-    const title = document.createElement('div')
-    title.className = 'page-title'
-    title.textContent = `Page ${page.page}`
-    pageDiv.appendChild(title)
-
-    const sorted = [...page.regions].sort(
-      (a, b) => (a.reading_order ?? 0) - (b.reading_order ?? 0)
-    )
-
-    for (const region of sorted) {
-      const text = region.text || region.gemini_response || ''
-      if (!text.trim()) continue
-
-      const label = (region.label || '').toLowerCase().replace(' ', '_')
-      const isGemini = GEMINI_LABELS.has(label)
-
-      const block = document.createElement('div')
-      block.className = 'region-block'
-      block.id = `region-${page.page}-${region.reading_order ?? 0}`
-
-      const labelEl = document.createElement('div')
-      labelEl.className = `region-label ${isGemini ? 'gemini' : ''}`
-      labelEl.textContent = isGemini ? `${region.label} (Gemini)` : region.label || 'text'
-      block.appendChild(labelEl)
-
-      const textEl = document.createElement('div')
-      textEl.className = 'region-text'
-      textEl.textContent = text.trim()
-      block.appendChild(textEl)
-
-      pageDiv.appendChild(block)
+      setStatus(
+        `Page ${data.page}/${data.total_pages} ready — ${state.ttsIsSpeaking ? 'reading aloud…' : 'starting audio…'}`,
+        'info'
+      )
+      break
     }
 
-    resultsPanel.appendChild(pageDiv)
+    case 'complete': {
+      const data = pipelineEvent.data as PipelineCompleteEvent
+      clearInterval(timerInterval)
+      progressFill.classList.remove('progress-indeterminate')
+
+      setProgress(100, `✓ Done in ${(data.total_time_ms / 1000).toFixed(1)}s`)
+      setStatus(
+        `✓ All ${data.total_pages} page(s) processed — ${state.ttsIsSpeaking ? 'reading aloud…' : 'audio complete.'}`,
+        'success'
+      )
+
+      console.log('Pipeline complete:', data)
+      finishPipeline()
+      break
+    }
+
+    case 'error': {
+      const data = pipelineEvent.data as PipelineErrorEvent
+      clearInterval(timerInterval)
+      progressFill.classList.remove('progress-indeterminate')
+
+      setStatus(`✗ Pipeline error: ${data.error}`, 'error')
+      setProgress(0, 'Failed')
+      console.error('Pipeline error event:', data)
+      finishPipeline()
+      break
+    }
   }
 }
 
+function finishPipeline(): void {
+  state.isProcessing = false
+  const startBtn = document.getElementById('startBtn')!
+  const voiceBtn = document.getElementById('voiceBtn')!
+  startBtn.removeAttribute('disabled')
+  voiceBtn.removeAttribute('disabled')
+
+  // Clean up event listener
+  if (state.pipelineEventCleanup) {
+    state.pipelineEventCleanup()
+    state.pipelineEventCleanup = null
+  }
+}
+
+
 // ══════════════════════════════════════
-//  TEXT-TO-SPEECH  (TTS)
+//  RENDER SINGLE PAGE (Incremental)
+// ══════════════════════════════════════
+function renderPage(pageData: PipelinePage): void {
+  const resultsPanel = document.getElementById('resultsPanel')!
+
+  const pageDiv = document.createElement('div')
+  pageDiv.className = 'page-block'
+
+  const title = document.createElement('div')
+  title.className = 'page-title'
+  title.textContent = `Page ${pageData.page}`
+  pageDiv.appendChild(title)
+
+  const sorted = [...pageData.regions].sort(
+    (a, b) => (a.reading_order ?? 0) - (b.reading_order ?? 0)
+  )
+
+  for (const region of sorted) {
+    const text = region.text || region.gemini_response || ''
+    if (!text.trim()) continue
+
+    const label = (region.label || '').toLowerCase().replace(' ', '_')
+    const isGemini = GEMINI_LABELS.has(label)
+
+    const block = document.createElement('div')
+    block.className = 'region-block'
+    block.id = `region-${pageData.page}-${region.reading_order ?? 0}`
+
+    const labelEl = document.createElement('div')
+    labelEl.className = `region-label ${isGemini ? 'gemini' : ''}`
+    labelEl.textContent = isGemini ? `${region.label} (Gemini)` : region.label || 'text'
+    block.appendChild(labelEl)
+
+    const textEl = document.createElement('div')
+    textEl.className = 'region-text'
+    textEl.textContent = text.trim()
+    block.appendChild(textEl)
+
+    pageDiv.appendChild(block)
+  }
+
+  resultsPanel.appendChild(pageDiv)
+}
+
+
+// ══════════════════════════════════════
+//  TEXT-TO-SPEECH  (TTS) — Incremental
 // ══════════════════════════════════════
 function setupTTS(): void {
   document.getElementById('ttsPlayBtn')!.addEventListener('click', () => {
@@ -516,51 +655,55 @@ function setupTTS(): void {
   })
 }
 
-function buildTTSQueue(result: PipelineResult): void {
-  state.ttsUtterances = []
-  state.ttsCurrentIndex = 0
+/**
+ * Append a single page's utterances to the TTS queue.
+ * Called each time a page_ready event arrives from the backend.
+ * If TTS is already playing, the new utterances will be naturally
+ * picked up by speakNext() when it reaches them.
+ */
+function appendPageToTTSQueue(pageData: PipelinePage): void {
+  // Page announcement
+  const pageAnnounce = new SpeechSynthesisUtterance(`Page ${pageData.page}.`)
+  pageAnnounce.rate = 1.0
+  state.ttsUtterances.push(pageAnnounce)
 
-  const pages = result.final_document?.pages || []
+  const sorted = [...pageData.regions].sort(
+    (a, b) => (a.reading_order ?? 0) - (b.reading_order ?? 0)
+  )
 
-  for (const page of pages) {
-    // Page announcement
-    const pageAnnounce = new SpeechSynthesisUtterance(`Page ${page.page}.`)
-    pageAnnounce.rate = 1.0
-    state.ttsUtterances.push(pageAnnounce)
+  for (const region of sorted) {
+    const text = region.text || region.gemini_response || ''
+    if (!text.trim()) continue
 
-    const sorted = [...page.regions].sort(
-      (a, b) => (a.reading_order ?? 0) - (b.reading_order ?? 0)
-    )
+    const label = (region.label || '').toLowerCase().replace(' ', '_')
+    const isGemini = GEMINI_LABELS.has(label)
 
-    for (const region of sorted) {
-      const text = region.text || region.gemini_response || ''
-      if (!text.trim()) continue
+    // For Gemini regions, prefix with a short label for context
+    let speakText = text.trim()
+    if (isGemini) {
+      speakText = `${region.label} description: ${speakText}`
+    }
 
-      const label = (region.label || '').toLowerCase().replace(' ', '_')
-      const isGemini = GEMINI_LABELS.has(label)
+    // Split long text into chunks (speechSynthesis can fail on very long strings)
+    // 30 words is safe to stay under the 15-second Chrome cutoff
+    const chunks = splitTextForTTS(speakText, 30)
 
-      // For Gemini regions, prefix with a short label for context
-      let speakText = text.trim()
-      if (isGemini) {
-        speakText = `${region.label} description: ${speakText}`
-      }
+    for (const chunk of chunks) {
+      const utterance = new SpeechSynthesisUtterance(chunk)
+      utterance.rate = 1.0
+      utterance.lang = 'en-US'
 
-      // Split long text into chunks (speechSynthesis can fail on very long strings)
-      // 30 words is safe to stay under the 15-second Chrome cutoff
-      const chunks = splitTextForTTS(speakText, 30)
+      // Store metadata for highlighting
+      const regionId = `region-${pageData.page}-${region.reading_order ?? 0}`
+      const imageUrl = pageData.debug_image_url ? `http://localhost:8000${pageData.debug_image_url}` : ''
+      
+      utterance.addEventListener('start', () => {
+        highlightRegion(regionId, true)
+        setCurrentDocumentImage(imageUrl)
+      })
+      utterance.addEventListener('end', () => highlightRegion(regionId, false))
 
-      for (const chunk of chunks) {
-        const utterance = new SpeechSynthesisUtterance(chunk)
-        utterance.rate = 1.0
-        utterance.lang = 'en-US'
-
-        // Store metadata for highlighting
-        const regionId = `region-${page.page}-${region.reading_order ?? 0}`
-        utterance.addEventListener('start', () => highlightRegion(regionId, true))
-        utterance.addEventListener('end', () => highlightRegion(regionId, false))
-
-        state.ttsUtterances.push(utterance)
-      }
+      state.ttsUtterances.push(utterance)
     }
   }
 }
@@ -597,7 +740,26 @@ function startTTS(): void {
 
 function speakNext(): void {
   if (state.ttsCurrentIndex >= state.ttsUtterances.length) {
+    // No more utterances available right now.
+    // If pipeline is still processing, wait for more pages;
+    // otherwise, we're truly done.
+    if (state.isProcessing) {
+      // Pipeline still running — check again shortly for new utterances
+      setTTSStatus(`Waiting for next page…`)
+      setTimeout(() => {
+        if (state.ttsIsSpeaking && !state.ttsIsPaused) {
+          speakNext()
+        }
+      }, 500)
+      return
+    }
+
+    // Pipeline finished and all utterances spoken
     state.ttsIsSpeaking = false
+    if (state.ttsKeepAliveTimer) {
+      window.clearInterval(state.ttsKeepAliveTimer)
+      state.ttsKeepAliveTimer = null
+    }
     updateTTSUI('stopped')
     setTTSStatus('Finished reading.')
     return
@@ -667,6 +829,23 @@ function highlightRegion(regionId: string, active: boolean): void {
     el.scrollIntoView({ behavior: 'smooth', block: 'center' })
   } else {
     el.classList.remove('speaking')
+  }
+}
+
+function setCurrentDocumentImage(url: string): void {
+  const viewer = document.getElementById('docImageViewer') as HTMLImageElement
+  const placeholder = document.getElementById('docImagePlaceholder')!
+  
+  if (!url) {
+    viewer.classList.add('hidden')
+    placeholder.classList.remove('hidden')
+    return
+  }
+  
+  if (viewer.src !== url) {
+    viewer.src = url
+    viewer.classList.remove('hidden')
+    placeholder.classList.add('hidden')
   }
 }
 

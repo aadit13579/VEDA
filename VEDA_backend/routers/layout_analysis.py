@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 import os
+import cv2
 import glob
 from services.layout_engine import pdf_to_images, analyze_layout, draw_layout_on_image
 from services.redis_client import set_page, set_total_pages
@@ -59,7 +60,7 @@ async def generate_bounding_boxes(file_id: str):
             # Draw Boxes
             output_filename = f"{file_id}_page_{page_num+1}.jpg"
             output_path = os.path.join(DEBUG_DIR, output_filename)
-            draw_layout_on_image(img, regions, output_path)
+            cv2.imwrite(output_path, img)
 
             results.append(
                 {

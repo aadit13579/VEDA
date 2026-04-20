@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, dialog, session } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -46,13 +46,26 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
+  // ── Auto-grant microphone permission for Web Speech API ──
+  session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => {
+    const allowed = ['media', 'microphone', 'audio-capture']
+    callback(allowed.includes(permission))
+  })
+  session.defaultSession.setPermissionCheckHandler((_webContents, permission) => {
+    const allowed = ['media', 'microphone', 'audio-capture']
+    return allowed.includes(permission)
+  })
+
   // ── IPC: Open file dialog ──
   ipcMain.handle('open-file-dialog', async () => {
     const result = await dialog.showOpenDialog({
-      title: 'Select Documents',
-      properties: ['openFile', 'multiSelections'],
+      title: 'Select Document',
+      properties: ['openFile'],
       filters: [
-        { name: 'Documents', extensions: ['pdf', 'png', 'jpg', 'jpeg', 'tiff', 'tif'] },
+        {
+          name: 'Documents',
+          extensions: ['pdf', 'png', 'jpg', 'jpeg', 'tiff', 'tif', 'doc', 'docx', 'ppt', 'pptx']
+        },
         { name: 'All Files', extensions: ['*'] }
       ]
     })
@@ -116,6 +129,58 @@ app.whenReady().then(() => {
     return startResult
   })
 
+  // ── IPC: Run full pipeline (single backend call) ──
+  ipcMain.handle(
+    'run-pipeline',
+    async (_event, filePath: string, startPage: number = 1) => {
+      try {
+        const fileName = path.basename(filePath)
+        const fileBuffer = fs.readFileSync(filePath)
+
+        // Determine MIME type from file extension
+        const ext = path.extname(fileName).toLowerCase()
+        const mimeTypes: Record<string, string> = {
+          '.pdf': 'application/pdf',
+          '.png': 'image/png',
+          '.jpg': 'image/jpeg',
+          '.jpeg': 'image/jpeg',
+          '.tiff': 'image/tiff',
+          '.tif': 'image/tiff',
+          '.doc': 'application/msword',
+          '.docx':
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          '.ppt': 'application/vnd.ms-powerpoint',
+          '.pptx':
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+        }
+        const mimeType = mimeTypes[ext] || 'application/octet-stream'
+
+        // Build multipart form data with a proper File object (includes filename + MIME)
+        const formData = new FormData()
+        const file = new File([new Uint8Array(fileBuffer)], fileName, { type: mimeType })
+        formData.append('file', file)
+
+        const url = `${BACKEND_URL}/api/v1/pipeline?start_page=${startPage}`
+
+        const response = await fetch(url, {
+          method: 'POST',
+          body: formData
+        })
+
+        if (!response.ok) {
+          const errorBody = await response.text()
+          throw new Error(`Pipeline failed (${response.status}): ${errorBody}`)
+        }
+
+        const pipelineResult = await response.json()
+        return pipelineResult
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error)
+        throw new Error(`Pipeline error: ${message}`)
+      }
+    }
+  )
+
   // ── IPC: Check backend health ──
   ipcMain.handle('check-backend', async () => {
     try {
@@ -123,6 +188,33 @@ app.whenReady().then(() => {
       return response.ok
     } catch {
       return false
+    }
+  })
+
+  // ── IPC: Transcribe audio (send to backend Gemini endpoint) ──
+  ipcMain.handle('transcribe-audio', async (_event, audioData: ArrayBuffer) => {
+    try {
+      const formData = new FormData()
+      const file = new File([new Uint8Array(audioData)], 'recording.webm', {
+        type: 'audio/webm'
+      })
+      formData.append('file', file)
+
+      const response = await fetch(`${BACKEND_URL}/api/v1/transcribe`, {
+        method: 'POST',
+        body: formData
+      })
+
+      if (!response.ok) {
+        const errorBody = await response.text()
+        throw new Error(`Transcription failed (${response.status}): ${errorBody}`)
+      }
+
+      const result = (await response.json()) as { transcript?: string }
+      return result.transcript || ''
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error)
+      throw new Error(`Transcription error: ${message}`)
     }
   })
 

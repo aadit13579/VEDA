@@ -131,9 +131,27 @@ function setupTheme(): void {
   })
 }
 
+// ── Floating Particles (Visual Effect) ──
+function spawnParticles(): void {
+  const canvas = document.getElementById('particleCanvas')
+  if (!canvas) return
+
+  const count = 30
+  for (let i = 0; i < count; i++) {
+    const particle = document.createElement('div')
+    particle.className = 'particle'
+    particle.style.left = `${Math.random() * 100}%`
+    particle.style.animationDuration = `${12 + Math.random() * 18}s`
+    particle.style.animationDelay = `${Math.random() * 15}s`
+    particle.style.opacity = `${0.15 + Math.random() * 0.35}`
+    canvas.appendChild(particle)
+  }
+}
+
 // ── Init ──
 function init(): void {
   window.addEventListener('DOMContentLoaded', () => {
+    spawnParticles()
     setupTheme()
     setupUpload()
     setupVoice()

@@ -16,54 +16,56 @@
     <link href="./assets/main.css" type="text/css" rel="stylesheet" />
   </head>
 
-  <body class="bg-[#2692AC] text-[#0F172A] font-['Inter',sans-serif] min-h-screen overflow-x-hidden overflow-y-auto select-none flex flex-col">
+  <body class="font-['Inter',sans-serif] min-h-screen overflow-x-hidden overflow-y-auto select-none flex flex-col">
+    
+    <!-- Animated Background Visuals -->
+    <div id="gridOverlay"></div>
+    <div id="particleCanvas"></div>
     
     <!-- Main Container filling the whole screen -->
     <div id="app" class="w-full h-full min-h-screen flex flex-col relative">
       
-      <!-- Hidden Theme Toggle to satisfy TS requirements -->
-      <button id="themeToggleBtn" class="hidden"></button>
-
       <!-- ═══════════════════════════════════════════════ -->
       <!-- PHASE 1: Upload (Home)                          -->
       <!-- ═══════════════════════════════════════════════ -->
       <div id="phaseUpload" class="flex-1 w-full flex flex-col items-center justify-center p-12 relative min-h-screen">
         
-        <!-- Mode Button (decorative as requested no shift option) -->
+        <!-- Mode Button -->
         <div class="absolute right-12 top-1/2 -translate-y-1/2">
-          <div class="w-16 h-16 rounded-full bg-[#1a7086] border-2 border-[#166074] flex items-center justify-center text-sm font-medium opacity-80 cursor-default">
+          <button id="themeToggleBtn" class="w-16 h-16 rounded-full bg-[#1a7086] border-2 border-[#166074] flex items-center justify-center text-sm font-medium hover:opacity-80 transition-opacity text-white cursor-pointer z-50">
             mode
-          </div>
+          </button>
         </div>
 
-        <h1 class="text-7xl md:text-[8rem] font-black text-[#0F172A] mb-20 font-['Playfair_Display',serif] tracking-tight">
+        <h1 class="text-7xl md:text-[8rem] font-black mb-20 font-['Playfair_Display',serif] tracking-tight">
           VEDA
         </h1>
         
         <!-- Upload Zone matching the mockup pill -->
         <div id="uploadZone" class="w-full max-w-2xl bg-[#E2E8F0] hover:bg-[#D1D5DB] transition-colors rounded-[2rem] px-12 py-12 text-center cursor-pointer shadow-sm border border-transparent">
-          <p class="text-3xl text-[#334155] font-['Inter'] font-normal">
+          <p class="text-3xl font-['Inter'] font-normal">
             Upload your Document
           </p>
         </div>
 
         <!-- Hidden badges/options preserved for backend functionality but matched to minimal style -->
-        <div id="fileBadge" class="mt-6 hidden text-[#0F172A] text-lg bg-white/40 px-6 py-2 rounded">
+        <div id="fileBadge" class="mt-6 hidden text-lg px-6 py-2 rounded">
           <span id="fileNameText" class="truncate font-medium"></span>
         </div>
 
         <div id="optionsRow" class="hidden mt-8 flex flex-col items-center gap-4">
-          <button id="startBtn" class="bg-[#0F172A] text-white hover:bg-black px-8 py-4 rounded font-medium text-lg w-full max-w-xs transition-colors">
+          <button id="startBtn" class="px-8 py-4 rounded font-medium text-xl w-full max-w-xs transition-colors">
             Start Processing
           </button>
-          <button id="voiceBtn" class="bg-transparent hover:bg-white/20 text-[#0F172A] px-6 py-3 rounded transition-colors text-sm font-medium border border-[#0F172A]/30">
-            <span id="voiceLabel">Or Speak Destination</span>
+          <button id="voiceBtn" class="relative overflow-hidden px-6 py-3 rounded transition-colors text-lg font-medium">
+            <div id="voicePulse" class="absolute inset-0 bg-white/10 animate-ping hidden"></div>
+            <span id="voiceLabel" class="relative z-10">Or Speak Destination</span>
           </button>
         </div>
 
-        <div id="voiceFeedback" class="hidden text-center mt-4 text-[#0F172A]">
-          <span id="voiceTranscript" class="block font-medium text-lg"></span>
-          <span id="parsedPage" class="block text-sm opacity-80"></span>
+        <div id="voiceFeedback" class="hidden text-center mt-4">
+          <span id="voiceTranscript" class="block font-medium text-xl"></span>
+          <span id="parsedPage" class="block text-base opacity-80"></span>
         </div>
 
       </div>
@@ -74,16 +76,16 @@
       <div id="phaseResults" class="hidden flex-1 w-full min-h-screen flex flex-row">
         
         <!-- Left Pane: Sections (resultsPanel) -->
-        <div class="w-1/2 flex flex-col border-r border-[#0F172A] p-8 h-screen overflow-hidden">
+        <div class="w-1/2 flex flex-col p-8 h-screen overflow-hidden">
           
           <!-- Minimal TTS Controls -->
           <div id="ttsControls" class="mb-6 flex items-center gap-3 shrink-0 rounded px-4 py-2 w-max bg-white/10">
-            <button id="ttsPlayBtn" class="text-sm font-semibold tracking-wide text-[#0F172A] hover:opacity-70">PLAY</button>
-            <button id="ttsPauseBtn" class="text-sm font-semibold tracking-wide text-[#0F172A] hover:opacity-70 hidden">PAUSE</button>
-            <button id="ttsResumeBtn" class="text-sm font-semibold tracking-wide text-[#0F172A] hover:opacity-70 hidden">RESUME</button>
-            <span class="text-[#0F172A] opacity-50 mx-1">|</span>
-            <button id="ttsStopBtn" class="text-sm font-semibold tracking-wide text-[#0F172A] hover:opacity-70">STOP</button>
-            <span id="ttsStatus" class="ml-4 text-xs font-medium text-[#0F172A] opacity-80 uppercase tracking-widest bg-white/20 px-2 py-1 rounded">Ready</span>
+            <button id="ttsPlayBtn" class="font-semibold tracking-wide">PLAY</button>
+            <button id="ttsPauseBtn" class="font-semibold tracking-wide hidden">PAUSE</button>
+            <button id="ttsResumeBtn" class="font-semibold tracking-wide hidden">RESUME</button>
+            <span class="opacity-50 mx-1">|</span>
+            <button id="ttsStopBtn" class="font-semibold tracking-wide">STOP</button>
+            <span id="ttsStatus" class="ml-4 font-medium uppercase tracking-widest px-2 py-1 rounded">Ready</span>
           </div>
 
           <!-- Document Results dynamically placed here -->
@@ -94,11 +96,11 @@
 
         <!-- Right Pane: Document Image Viewer -->
         <div class="w-1/2 flex flex-col p-8 items-center h-screen overflow-hidden">
-          <h2 class="text-4xl text-[#0F172A] mb-8 font-['Playfair_Display',serif] tracking-tight mt-4">Your Document</h2>
+          <h2 class="text-4xl mb-8 font-['Playfair_Display',serif] tracking-tight mt-4">Your Document</h2>
           
-          <div class="flex-1 w-full flex items-center justify-center relative shadow-md bg-white border border-[#0F172A]/20">
-            <p id="docImagePlaceholder" class="text-[#0F172A] opacity-60 text-lg">Processing...</p>
-            <img id="docImageViewer" class="absolute inset-0 w-full h-full object-contain hidden bg-white" src="" />
+          <div class="flex-1 w-full flex items-center justify-center relative">
+            <p id="docImagePlaceholder" class="opacity-60 text-xl">Processing...</p>
+            <img id="docImageViewer" class="absolute inset-0 w-full h-full object-contain hidden" src="" />
           </div>
         </div>
 
@@ -108,15 +110,15 @@
       <!-- Progress Bar                                   -->
       <!-- ═══════════════════════════════════════════════ -->
       <div id="progressContainer" class="hidden w-full max-w-2xl mx-auto absolute bottom-12 left-1/2 -translate-x-1/2 z-50">
-        <div class="w-full bg-[#E2E8F0]/30 h-1">
-          <div id="progressFill" class="bg-[#0F172A] h-full transition-all duration-300" style="width: 0%"></div>
+        <div class="w-full h-1.5">
+          <div id="progressFill" class="h-full transition-all duration-300" style="width: 0%"></div>
         </div>
-        <p id="progressText" class="text-sm text-[#0F172A] text-center mt-3 font-medium bg-white/50 inline-block px-4 py-1 rounded mx-auto"></p>
+        <p id="progressText" class="text-base text-center mt-3 font-medium inline-block px-4 py-1 rounded mx-auto"></p>
       </div>
 
       <!-- Status Bar -->
       <div id="statusBar" class="hidden absolute bottom-4 left-1/2 -translate-x-1/2 z-50">
-        <p id="statusText" class="text-[13px] text-[#0F172A] opacity-70"></p>
+        <p id="statusText" class="text-base"></p>
       </div>
 
     </div>

@@ -738,3 +738,107 @@ button:focus-visible {
 #statusText.status-warning { color: var(--warning); }
 #statusText.status-error   { color: var(--error);   }
 #statusText.status-info    { color: var(--info);     }
+
+/* ═══════════════════════════════════════════════════
+   HISTORY PANEL (Side Drawer)
+   ═══════════════════════════════════════════════════ */
+
+.history-panel {
+  position: fixed;
+  top: var(--top-bar-h);
+  right: 0;
+  bottom: 0;
+  width: 320px;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  z-index: 90;
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  box-shadow: -4px 0 15px rgba(0, 0, 0, 0.05);
+}
+
+/* Ensure hidden doesn't conflict with animation initially */
+.history-panel:not(.open) {
+  pointer-events: none;
+}
+
+.history-panel.open {
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-alt);
+}
+
+.history-header h3 {
+  font-size: var(--font-base);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+#closeHistoryBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 0.25rem;
+  transition: color 0.2s;
+}
+#closeHistoryBtn:hover {
+  color: var(--error);
+}
+
+.history-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem 0;
+}
+
+.history-empty, .history-error {
+  padding: 2rem 1.5rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: var(--font-sm);
+  font-style: italic;
+}
+
+.history-item {
+  padding: 0.8rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.history-item:hover {
+  background: var(--surface-hover);
+}
+
+.history-item-title {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-item-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+

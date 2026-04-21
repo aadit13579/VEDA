@@ -73,6 +73,7 @@ from services.spatial_sort_engine import process_spatial_sort
 from routers.ingest import _classify_pdf
 
 from utils.logger import get_logger
+from utils.text_cleaner import clean_extracted_text
 
 logger = get_logger(__name__)
 
@@ -204,10 +205,11 @@ async def _process_gemini_region(
                 top_k=8,
             ),
         )
-        region["text"] = result.get("gemini_response", "")
+        raw_resp = result.get("gemini_response", "")
+        region["text"] = clean_extracted_text(raw_resp)
         region["gemini_caption"] = result.get("caption")
         region["gemini_context_text"] = result.get("context_text")
-        region["gemini_response"] = result.get("gemini_response")
+        region["gemini_response"] = clean_extracted_text(raw_resp)
 
         elapsed = (time.time() - t0) * 1000
         logger.info(
@@ -251,7 +253,7 @@ async def _process_gemini_region(
                 _EXECUTOR,
                 lambda: extract_text_with_gemini(page_image, bbox),
             )
-        region["text"] = text
+        region["text"] = clean_extracted_text(text)
 
         with lock:
             counters["ocr"] += 1
@@ -321,7 +323,7 @@ async def _process_ocr_region(
                 with lock:
                     counters["gemini"] += 1
 
-        region["text"] = text
+        region["text"] = clean_extracted_text(text)
         elapsed = (time.time() - t0) * 1000
         logger.info(
             f"   [PARALLEL][OCR]    DONE   page={page_num} label={label} "
@@ -438,12 +440,12 @@ async def _process_page(
                 None,
             )
             if text_region:
-                text_region["text"] = full_text
+                text_region["text"] = clean_extracted_text(full_text)
             else:
                 regions.append({
                     "label": "text",
                     "bbox": [0, 0, 100, 100],
-                    "text": full_text,
+                    "text": clean_extracted_text(full_text),
                     "confidence": 1.0,
                     "id": "r_fullpage",
                     "reading_order": 0,
@@ -473,6 +475,7 @@ async def _process_page(
 
 async def _run_pipeline_background(
     file_id: str,
+    original_filename: str,
     file_path: str,
     category: str,
     start_page: int,
@@ -580,6 +583,8 @@ async def _run_pipeline_background(
 
         final_document: dict[str, Any] = {
             "file_id": file_id,
+            "original_filename": original_filename,
+            "category": category,
             "total_pages": len(final_pages),
             "pages": final_pages,
         }
@@ -709,6 +714,7 @@ async def start_pipeline(
     asyncio.create_task(
         _run_pipeline_background(
             file_id=file_id,
+            original_filename=file.filename,
             file_path=file_path,
             category=category,
             start_page=start_page,
@@ -773,3 +779,51 @@ async def stream_pipeline(file_id: str):
             "X-Accel-Buffering": "no",  # Disable Nginx buffering if proxied
         },
     )
+
+
+# ── History Endpoints ────────────────────────────────────────────────────────
+
+@router.get("/pipeline/history")
+async def get_history():
+    """
+    Returns a brief list of all previously processed documents from Iceberg storage.
+    """
+    history = []
+    if os.path.exists(ICEBERG_DIR):
+        for entry in os.scandir(ICEBERG_DIR):
+            if entry.is_file() and entry.name.endswith("_final.json"):
+                try:
+                    # Fetch basic metadata without sending the entire multi-MB file
+                    with open(entry.path, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                        
+                        file_id = data.get("file_id")
+                        filename = data.get("original_filename", entry.name.replace("_final.json", ""))
+                        category = data.get("category", "UNKNOWN")
+                        total_pages = data.get("total_pages", 0)
+                        
+                        history.append({
+                            "file_id": file_id,
+                            "filename": filename,
+                            "category": category,
+                            "total_pages": total_pages,
+                            "timestamp": os.path.getmtime(entry.path)
+                        })
+                except Exception as e:
+                    logger.warning(f"Failed to read history file {entry.path}: {e}")
+                    
+    # Sort by timestamp descending (newest first)
+    return sorted(history, key=lambda x: x["timestamp"], reverse=True)
+
+
+@router.get("/pipeline/history/{file_id}")
+async def get_history_file(file_id: str):
+    """
+    Returns the full JSON result for a specific document from Iceberg storage.
+    """
+    hist_path = os.path.join(ICEBERG_DIR, f"{file_id}_final.json")
+    if os.path.exists(hist_path):
+        from fastapi.responses import FileResponse
+        return FileResponse(hist_path, media_type="application/json")
+        
+    raise HTTPException(status_code=404, detail=f"History for '{file_id}' not found.")

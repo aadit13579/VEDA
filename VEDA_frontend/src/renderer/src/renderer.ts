@@ -183,6 +183,7 @@ function init(): void {
     setupVoice()
     setupStart()
     setupTTS()
+    setupHistory()
     checkBackendHealth()
   })
 }
@@ -984,6 +985,134 @@ function encodeWav(samples: Float32Array, sampleRate: number): ArrayBuffer {
 function writeAscii(view: DataView, offset: number, str: string): void {
   for (let i = 0; i < str.length; i++) {
     view.setUint8(offset + i, str.charCodeAt(i))
+  }
+}
+
+// ══════════════════════════════════════
+//  HISTORY PANEL
+// ══════════════════════════════════════
+
+interface HistoryItem {
+  file_id: string
+  filename: string
+  category: string
+  total_pages: number
+  timestamp: number
+}
+
+function setupHistory(): void {
+  const toggleBtn = document.getElementById('historyToggleBtn')
+  const closeBtn = document.getElementById('closeHistoryBtn')
+  const panel = document.getElementById('historyPanel')
+
+  if (!toggleBtn || !closeBtn || !panel) return
+
+  toggleBtn.addEventListener('click', () => {
+    const isOpen = panel.classList.contains('open')
+    if (isOpen) {
+      panel.classList.remove('open')
+    } else {
+      panel.classList.add('open')
+      loadHistoryItems()
+    }
+  })
+
+  closeBtn.addEventListener('click', () => {
+    panel.classList.remove('open')
+  })
+}
+
+async function loadHistoryItems(): Promise<void> {
+  const list = document.getElementById('historyList')
+  if (!list) return
+
+  try {
+    const res = await fetch('http://localhost:8000/api/v1/pipeline/history')
+    if (!res.ok) throw new Error('Failed to fetch history')
+    const items: HistoryItem[] = await res.json()
+
+    list.innerHTML = ''
+    if (items.length === 0) {
+      list.innerHTML = '<p class="history-empty">No previous documents found.</p>'
+      return
+    }
+
+    items.forEach(item => {
+      const el = document.createElement('div')
+      el.className = 'history-item'
+      
+      const title = document.createElement('div')
+      title.className = 'history-item-title'
+      title.textContent = item.filename
+      
+      const meta = document.createElement('div')
+      meta.className = 'history-item-meta'
+      const date = new Date(item.timestamp * 1000).toLocaleString(undefined, {
+        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+      })
+      meta.textContent = `${item.total_pages} page(s) • ${date}`
+      
+      el.appendChild(title)
+      el.appendChild(meta)
+      
+      el.addEventListener('click', () => loadHistoryDocument(item))
+      list.appendChild(el)
+    })
+  } catch (err) {
+    console.error('History API error:', err)
+    list.innerHTML = '<p class="history-error">Failed to load history.</p>'
+  }
+}
+
+async function loadHistoryDocument(item: HistoryItem): Promise<void> {
+  document.getElementById('historyPanel')?.classList.remove('open')
+  
+  if (state.isProcessing) {
+    setStatus('Cannot load history while processing another document.', 'warning')
+    return
+  }
+  
+  setStatus(`Loading "${item.filename}" from history…`, 'info')
+  
+  try {
+    const res = await fetch(`http://localhost:8000/api/v1/pipeline/history/${item.file_id}`)
+    if (!res.ok) throw new Error('Failed to fetch document JSON')
+    
+    const docData = await res.json()
+    
+    // Clear state
+    state.filePath = null // It's not a local path anymore
+    state.fileName = item.filename
+    state.fileId = item.file_id
+    state.fileCategory = item.category
+    
+    window.speechSynthesis.cancel()
+    state.activeRegionId = null
+    state.regionUtterances.clear()
+    state.regionChunkIndex.clear()
+    
+    // Prepare UI
+    const phaseUpload = document.getElementById('phaseUpload')!
+    const phaseResults = document.getElementById('phaseResults')!
+    const resultsPanel = document.getElementById('resultsPanel')!
+    
+    phaseUpload.classList.add('hidden')
+    phaseResults.classList.remove('hidden')
+    resultsPanel.innerHTML = ''
+    
+    // Show document in viewer
+    setDocumentViewer(item.file_id, item.category)
+    
+    // Render all pages incrementally
+    const pages: PipelinePage[] = docData.pages || []
+    pages.forEach(page => renderPage(page))
+    
+    setStatus(`"${item.filename}" loaded successfully from library.`, 'success')
+    setTTSStatus('Ready')
+    
+  } catch (err) {
+    console.error('Failed to load history document:', err)
+    setStatus('Failed to load document from history.', 'error')
   }
 }
 

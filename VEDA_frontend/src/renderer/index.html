@@ -30,6 +30,12 @@
           <span id="topBarTagline">Document Accessibility Engine</span>
         </div>
         <div id="topBarControls">
+          <!-- History Button -->
+          <button id="historyToggleBtn" class="nav-btn" aria-label="Toggle History" title="View previously processed documents">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </button>
+          <div class="topbar-divider"></div>
+
           <!-- Font Size Controls -->
           <div id="fontSizeControls" aria-label="Font size">
             <button id="fontSmBtn"  class="font-size-btn" title="Small text"  aria-label="Small font size">A<sup>−</sup></button>
@@ -144,6 +150,19 @@
       <!-- Status Bar -->
       <div id="statusBar" class="hidden">
         <p id="statusText" aria-live="polite"></p>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════ -->
+      <!-- History Drawer (Overlay)                        -->
+      <!-- ═══════════════════════════════════════════════ -->
+      <div id="historyPanel" class="history-panel">
+        <div class="history-header">
+          <h3>Document Library</h3>
+          <button id="closeHistoryBtn" aria-label="Close library">✕</button>
+        </div>
+        <div id="historyList" class="history-list">
+          <p class="history-empty">Loading history...</p>
+        </div>
       </div>
 
     </div><!-- /#app -->

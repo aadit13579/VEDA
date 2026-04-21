@@ -1,4 +1,5 @@
 from fastapi import APIRouter, UploadFile, File
+from fastapi.responses import FileResponse
 import shutil
 import os
 import uuid
@@ -15,7 +16,36 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 import time
 
+# ── Serve the original uploaded file (any extension) ─────────────────────────
+
+@router.get("/document/{file_id}")
+async def get_document(file_id: str):
+    """
+    Return the original uploaded file for a given file_id.
+    Searches storage/ for any file whose stem matches file_id.
+    Used by the frontend to embed the PDF / image directly.
+    """
+    for entry in os.scandir(UPLOAD_DIR):
+        if entry.is_file() and os.path.splitext(entry.name)[0] == file_id:
+            mime = "application/octet-stream"
+            ext = os.path.splitext(entry.name)[1].lower()
+            if ext == ".pdf":
+                mime = "application/pdf"
+            elif ext in (".png", ".jpg", ".jpeg"):
+                mime = f"image/{ext.lstrip('.')}"
+            elif ext in (".tif", ".tiff"):
+                mime = "image/tiff"
+            return FileResponse(
+                path=entry.path,
+                media_type=mime,
+                headers={"Accept-Ranges": "bytes"},
+            )
+    from fastapi import HTTPException
+    raise HTTPException(status_code=404, detail=f"No file found for file_id '{file_id}'.")
+
+
 @router.post("/upload")
+
 async def upload_and_identify(file: UploadFile = File(...)):
     logger.info(f"Received upload request for file: {file.filename}")
     start_time = time.time()

@@ -64,19 +64,20 @@ interface PipelineEvent {
 interface VedaState {
   filePath: string | null
   fileName: string | null
+  fileId: string | null        // returned by /pipeline/start
+  fileCategory: string | null  // PDF_DIGITAL, IMAGE, etc.
   startPage: number
   isProcessing: boolean
   isListening: boolean
-  // TTS
-  ttsUtterances: SpeechSynthesisUtterance[]
-  ttsCurrentIndex: number
-  ttsIsPaused: boolean
-  ttsIsSpeaking: boolean
+  // Per-region TTS
+  activeRegionId: string | null      // which region is currently speaking
+  regionUtterances: Map<string, SpeechSynthesisUtterance[]>  // regionId → chunks
+  regionChunkIndex: Map<string, number>                       // regionId → next chunk index
+  // Keep-alive timer (prevents Chrome 15-second TTS cutoff)
+  ttsKeepAliveTimer: number | null
   // Audio recording
   mediaRecorder: MediaRecorder | null
   audioChunks: Blob[]
-  // Keep-alive timer
-  ttsKeepAliveTimer: number | null
   // Pipeline event listener cleanup
   pipelineEventCleanup: (() => void) | null
 }
@@ -84,16 +85,17 @@ interface VedaState {
 const state: VedaState = {
   filePath: null,
   fileName: null,
+  fileId: null,
+  fileCategory: null,
   startPage: 1,
   isProcessing: false,
   isListening: false,
-  ttsUtterances: [],
-  ttsCurrentIndex: 0,
-  ttsIsPaused: false,
-  ttsIsSpeaking: false,
+  activeRegionId: null,
+  regionUtterances: new Map(),
+  regionChunkIndex: new Map(),
+  ttsKeepAliveTimer: null,
   mediaRecorder: null,
   audioChunks: [],
-  ttsKeepAliveTimer: null,
   pipelineEventCleanup: null
 }
 
@@ -109,49 +111,73 @@ const GEMINI_LABELS = new Set([
 ])
 
 // ── Theme Toggling ──
+function updateThemeIcon(): void {
+  const icon = document.getElementById('themeIcon')
+  if (!icon) return
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+  icon.textContent = isDark ? '☾' : '☀'
+}
+
 function setupTheme(): void {
   const toggleBtn = document.getElementById('themeToggleBtn')!
-  
+
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
   const savedTheme = localStorage.getItem('veda-theme')
   const isDark = savedTheme === 'dark' || (!savedTheme && prefersDark)
-  
+
   if (isDark) document.documentElement.setAttribute('data-theme', 'dark')
-  
+  updateThemeIcon()
+
   toggleBtn.addEventListener('click', () => {
     const currentTheme = document.documentElement.getAttribute('data-theme')
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark'
-    
-    if (newTheme === 'dark') {
-      document.documentElement.setAttribute('data-theme', 'dark')
-    } else {
+    if (currentTheme === 'dark') {
       document.documentElement.removeAttribute('data-theme')
+      localStorage.setItem('veda-theme', 'light')
+    } else {
+      document.documentElement.setAttribute('data-theme', 'dark')
+      localStorage.setItem('veda-theme', 'dark')
     }
-    localStorage.setItem('veda-theme', newTheme)
+    updateThemeIcon()
   })
 }
 
-// ── Floating Particles (Visual Effect) ──
-function spawnParticles(): void {
-  const canvas = document.getElementById('particleCanvas')
-  if (!canvas) return
+// ── Font Size Controls ──
+function setupFontSize(): void {
+  const sizes = ['sm', 'md', 'lg'] as const
+  type FontSize = typeof sizes[number]
 
-  const count = 30
-  for (let i = 0; i < count; i++) {
-    const particle = document.createElement('div')
-    particle.className = 'particle'
-    particle.style.left = `${Math.random() * 100}%`
-    particle.style.animationDuration = `${12 + Math.random() * 18}s`
-    particle.style.animationDelay = `${Math.random() * 15}s`
-    particle.style.opacity = `${0.15 + Math.random() * 0.35}`
-    canvas.appendChild(particle)
+  // btnMap must be declared BEFORE applyFontSize is called
+  // (applyFontSize reads btnMap — calling it before this line causes a TDZ crash)
+  const btnMap: Record<FontSize, string> = {
+    sm: 'fontSmBtn',
+    md: 'fontMdBtn',
+    lg: 'fontLgBtn'
+  }
+
+  function applyFontSize(size: FontSize): void {
+    document.documentElement.removeAttribute('data-font')
+    if (size !== 'md') document.documentElement.setAttribute('data-font', size)
+    for (const s of sizes) {
+      document.getElementById(btnMap[s])?.classList.toggle('active', s === size)
+    }
+  }
+
+  // Apply saved preference (safe now that btnMap is defined above)
+  const savedFont = (localStorage.getItem('veda-font') ?? 'md') as FontSize
+  applyFontSize(savedFont)
+
+  for (const size of sizes) {
+    document.getElementById(btnMap[size])?.addEventListener('click', () => {
+      applyFontSize(size)
+      localStorage.setItem('veda-font', size)
+    })
   }
 }
 
 // ── Init ──
 function init(): void {
   window.addEventListener('DOMContentLoaded', () => {
-    spawnParticles()
+    setupFontSize()
     setupTheme()
     setupUpload()
     setupVoice()
@@ -166,12 +192,12 @@ async function checkBackendHealth(): Promise<void> {
   try {
     const isHealthy = await window.electron.ipcRenderer.invoke('check-backend')
     if (isHealthy) {
-      setStatus('✓ Backend connected — upload a document to begin.', 'success')
+      setStatus('Backend connected — ready to upload a document.', 'success')
     } else {
-      setStatus('⚠ Backend not running. Start with: uvicorn main:app --reload', 'warning')
+      setStatus('Backend is not running. Start it with: uvicorn main:app --reload', 'warning')
     }
   } catch {
-    setStatus('⚠ Backend not running. Start with: uvicorn main:app --reload', 'warning')
+    setStatus('Backend is not running. Start it with: uvicorn main:app --reload', 'warning')
   }
 }
 
@@ -203,7 +229,7 @@ function setupUpload(): void {
         document.getElementById('phaseResults')!.classList.add('hidden')
         window.speechSynthesis.cancel()
 
-        setStatus(`"${state.fileName}" selected — choose how to start.`, 'info')
+        setStatus(`"${state.fileName}" selected — ready to start.`, 'info')
       }
     } catch (err) {
       console.error('File dialog error:', err)
@@ -273,7 +299,7 @@ function setupVoice(): void {
           return
         }
 
-        setStatus('🔄 Transcribing your voice command…', 'info')
+        setStatus('Transcribing your voice command…', 'info')
 
         try {
           // Convert WebM to WAV (SpeechRecognition backend needs WAV)
@@ -298,33 +324,29 @@ function setupVoice(): void {
           const pageNum = parsePageNumber(transcript.toLowerCase())
           if (pageNum !== null) {
             state.startPage = pageNum
-            parsedPage.textContent = `→ Starting from page ${pageNum}`
+            parsedPage.textContent = `Starting from page ${pageNum}.`
             setStatus(
-              `Voice captured: starting from page ${pageNum}. Processing…`,
+              `Voice recognised — starting from page ${pageNum}.`,
               'info'
             )
             // Auto-start pipeline
             runPipeline()
           } else {
-            parsedPage.textContent =
-              '→ Could not detect a page number. Try again.'
+            parsedPage.textContent = 'Could not detect a page number. Try again.'
             setStatus(
-              'Could not detect a page number. Try saying "go to page 3".',
+              'No page number detected. Try saying "go to page 3".',
               'warning'
             )
           }
         } catch (err) {
           console.error('Transcription error:', err)
-          setStatus('Transcription failed. Try again.', 'error')
+          setStatus('Transcription failed. Please try again.', 'error')
         }
       }
 
       // Start recording
       mediaRecorder.start()
-      setStatus(
-        '🎙 Recording… click again to stop, or say "go to page 5"',
-        'info'
-      )
+      setStatus('Recording… click the button again to stop.', 'info')
 
       // Auto-stop after 8 seconds to prevent endless recording
       setTimeout(() => {
@@ -334,7 +356,7 @@ function setupVoice(): void {
       }, 8000)
     } catch (err) {
       console.error('Microphone access error:', err)
-      setStatus('⚠ Could not access microphone. Check permissions.', 'error')
+      setStatus('Microphone access denied. Please check your permissions.', 'error')
       state.isListening = false
       updateVoiceUI(false)
     }
@@ -347,15 +369,13 @@ function updateVoiceUI(recording: boolean): void {
   const voiceLabel = document.getElementById('voiceLabel')!
 
   if (recording) {
-    voiceBtn.classList.add('border-purple-500', 'bg-purple-500/10')
+    voiceBtn.dataset.recording = 'true'
     voicePulse.classList.remove('hidden')
-    voiceLabel.textContent = 'Recording…'
-    voiceLabel.classList.add('text-purple-400')
+    voiceLabel.textContent = 'Recording… click to stop'
   } else {
-    voiceBtn.classList.remove('border-purple-500', 'bg-purple-500/10')
+    delete voiceBtn.dataset.recording
     voicePulse.classList.add('hidden')
-    voiceLabel.textContent = 'Speak Destination'
-    voiceLabel.classList.remove('text-purple-400')
+    voiceLabel.textContent = 'Go to a specific page by voice'
   }
 }
 
@@ -432,11 +452,10 @@ async function runPipeline(): Promise<void> {
   state.isProcessing = true
   window.speechSynthesis.cancel()
 
-  // Reset TTS state for new pipeline run
-  state.ttsUtterances = []
-  state.ttsCurrentIndex = 0
-  state.ttsIsPaused = false
-  state.ttsIsSpeaking = false
+  // Reset TTS state
+  state.activeRegionId = null
+  state.regionUtterances.clear()
+  state.regionChunkIndex.clear()
 
   const startBtn = document.getElementById('startBtn')!
   const voiceBtn = document.getElementById('voiceBtn')!
@@ -450,12 +469,8 @@ async function runPipeline(): Promise<void> {
   phaseResults.classList.remove('hidden')
   resultsPanel.innerHTML = ''
 
-  // Reset document image viewer
-  const placeholder = document.getElementById('docImagePlaceholder')!
-  const viewer = document.getElementById('docImageViewer') as HTMLImageElement
-  placeholder.classList.remove('hidden')
-  viewer.classList.add('hidden')
-  viewer.src = ''
+  // Reset document viewer
+  setDocumentViewer(null, null)
 
   // Start indeterminate progress bar + elapsed timer
   const progressFill = document.getElementById('progressFill')!
@@ -464,36 +479,40 @@ async function runPipeline(): Promise<void> {
   const timerInterval = setInterval(() => {
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(0)
     setProgressText(
-      `⏳ Processing "${state.fileName}" from page ${state.startPage}… (${elapsed}s elapsed)`
+      `Processing "${state.fileName}" from page ${state.startPage}… (${elapsed}s)`
     )
   }, 1000)
-  setProgressText(`⏳ Processing "${state.fileName}" from page ${state.startPage}…`)
-  setStatus('Starting pipeline: Upload → Layout → Sort → OCR (per page, streamed)', 'info')
+  setProgressText(`Processing "${state.fileName}" from page ${state.startPage}…`)
+  setStatus('Analysing document — pages will appear as they are ready.', 'info')
 
   try {
-    // ── Set up SSE event listener BEFORE starting pipeline ──
-    // Clean up any previous listener
+    // Clean up any previous pipeline listener
     if (state.pipelineEventCleanup) {
       state.pipelineEventCleanup()
       state.pipelineEventCleanup = null
     }
 
-    // Register listener for pipeline events from main process
+    // Register SSE listener
     const cleanup = window.electron.ipcRenderer.on('pipeline-event', (_event, pipelineEvent: PipelineEvent) => {
       handlePipelineEvent(pipelineEvent, timerInterval, progressFill, startTime)
     })
     state.pipelineEventCleanup = cleanup
 
-    // ── Start the pipeline (returns immediately with file_id) ──
+    // Start pipeline
     const startResult: StartPipelineResult = await window.electron.ipcRenderer.invoke(
       'start-pipeline',
       state.filePath,
       state.startPage
     )
 
+    // Capture file_id and show original document immediately
+    state.fileId = startResult.file_id
+    state.fileCategory = startResult.category
+    setDocumentViewer(startResult.file_id, startResult.category)
+
     console.log('Pipeline started:', startResult)
     setStatus(
-      `Pipeline started — ${startResult.total_pages} page(s). Audio will begin as pages are ready…`,
+      `Processing — ${startResult.total_pages} page(s) detected. Audio will begin shortly…`,
       'info'
     )
 
@@ -502,7 +521,7 @@ async function runPipeline(): Promise<void> {
     progressFill.classList.remove('progress-indeterminate')
 
     const message = err instanceof Error ? err.message : String(err)
-    setStatus(`✗ Pipeline failed: ${message}`, 'error')
+    setStatus(`Processing failed: ${message}`, 'error')
     setProgress(0, 'Failed')
     console.error('Pipeline start error:', err)
 
@@ -531,27 +550,14 @@ function handlePipelineEvent(
       progressFill.classList.remove('progress-indeterminate')
       setProgress(
         percent,
-        `📄 Page ${data.page}/${data.total_pages} ready (${elapsed}s elapsed)`
+        `Page ${data.page} of ${data.total_pages} complete (${elapsed}s)`
       )
 
-      // Render this page incrementally
+      // Render this page (creates region blocks with per-region play buttons)
       renderPage(data.page_data)
 
-      // Instantiate the image preview immediately if it hasn't been set yet (first page hit)
-      const viewer = document.getElementById('docImageViewer') as HTMLImageElement
-      if (viewer.classList.contains('hidden')) {
-          const imageUrl = data.page_data.debug_image_url ? `http://localhost:8000${data.page_data.debug_image_url}` : ''
-          setCurrentDocumentImage(imageUrl)
-      }
-
-      // Append to TTS queue and start speaking if not already
-      appendPageToTTSQueue(data.page_data)
-      if (!state.ttsIsSpeaking) {
-        startTTS()
-      }
-
       setStatus(
-        `Page ${data.page}/${data.total_pages} ready — ${state.ttsIsSpeaking ? 'reading aloud…' : 'starting audio…'}`,
+        `Page ${data.page} of ${data.total_pages} processed.`,
         'info'
       )
       break
@@ -562,9 +568,9 @@ function handlePipelineEvent(
       clearInterval(timerInterval)
       progressFill.classList.remove('progress-indeterminate')
 
-      setProgress(100, `✓ Done in ${(data.total_time_ms / 1000).toFixed(1)}s`)
+      setProgress(100, `Done in ${(data.total_time_ms / 1000).toFixed(1)}s`)
       setStatus(
-        `✓ All ${data.total_pages} page(s) processed — ${state.ttsIsSpeaking ? 'reading aloud…' : 'audio complete.'}`,
+        `All ${data.total_pages} page(s) processed successfully.`,
         'success'
       )
 
@@ -578,8 +584,8 @@ function handlePipelineEvent(
       clearInterval(timerInterval)
       progressFill.classList.remove('progress-indeterminate')
 
-      setStatus(`✗ Pipeline error: ${data.error}`, 'error')
-      setProgress(0, 'Failed')
+      setStatus(`An error occurred: ${data.error}`, 'error')
+      setProgress(0, 'Processing failed')
       console.error('Pipeline error event:', data)
       finishPipeline()
       break
@@ -626,15 +632,34 @@ function renderPage(pageData: PipelinePage): void {
 
     const label = (region.label || '').toLowerCase().replace(' ', '_')
     const isGemini = GEMINI_LABELS.has(label)
+    const regionId = `region-${pageData.page}-${region.reading_order ?? 0}`
 
     const block = document.createElement('div')
     block.className = 'region-block'
-    block.id = `region-${pageData.page}-${region.reading_order ?? 0}`
+    block.id = regionId
 
-    const labelEl = document.createElement('div')
+    // ── Label row with inline Play/Pause button ──
+    const labelRow = document.createElement('div')
+    labelRow.className = 'region-label-row'
+
+    const labelEl = document.createElement('span')
     labelEl.className = `region-label ${isGemini ? 'gemini' : ''}`
-    labelEl.textContent = isGemini ? `${region.label} (Gemini)` : region.label || 'text'
-    block.appendChild(labelEl)
+    labelEl.textContent = isGemini ? `${region.label} (visual)` : region.label || 'text'
+    labelRow.appendChild(labelEl)
+
+    // Play/Pause toggle button for this region
+    const playBtn = document.createElement('button')
+    playBtn.className = 'region-play-btn'
+    playBtn.setAttribute('aria-label', 'Play this section')
+    playBtn.dataset.regionId = regionId
+    playBtn.innerHTML = `
+      <svg class="icon-play" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      <svg class="icon-pause hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+      <span class="region-play-label">Play</span>
+    `
+    playBtn.addEventListener('click', () => toggleRegionPlayback(regionId))
+    labelRow.appendChild(playBtn)
+    block.appendChild(labelRow)
 
     const textEl = document.createElement('div')
     textEl.className = 'region-text'
@@ -642,87 +667,154 @@ function renderPage(pageData: PipelinePage): void {
     block.appendChild(textEl)
 
     pageDiv.appendChild(block)
+
+    // Pre-build utterances for this region and store in state
+    buildRegionUtterances(regionId, text.trim(), isGemini ? region.label || '' : '')
   }
 
   resultsPanel.appendChild(pageDiv)
 }
 
 
+
 // ══════════════════════════════════════
-//  TEXT-TO-SPEECH  (TTS) — Incremental
+//  PER-REGION TTS
 // ══════════════════════════════════════
+
 function setupTTS(): void {
-  document.getElementById('ttsPlayBtn')!.addEventListener('click', () => {
-    if (state.ttsIsPaused) {
-      resumeTTS()
-    } else if (!state.ttsIsSpeaking) {
-      startTTS()
-    }
-  })
-
-  document.getElementById('ttsPauseBtn')!.addEventListener('click', () => {
-    pauseTTS()
-  })
-
-  document.getElementById('ttsResumeBtn')!.addEventListener('click', () => {
-    resumeTTS()
-  })
-
-  document.getElementById('ttsStopBtn')!.addEventListener('click', () => {
-    stopTTS()
-  })
+  // No global buttons — per-region buttons are wired in renderPage()
 }
 
-/**
- * Append a single page's utterances to the TTS queue.
- * Called each time a page_ready event arrives from the backend.
- * If TTS is already playing, the new utterances will be naturally
- * picked up by speakNext() when it reaches them.
- */
-function appendPageToTTSQueue(pageData: PipelinePage): void {
-  // Page announcement
-  const pageAnnounce = new SpeechSynthesisUtterance(`Page ${pageData.page}.`)
-  pageAnnounce.rate = 1.0
-  state.ttsUtterances.push(pageAnnounce)
+/** Build and store SpeechSynthesisUtterance chunks for a region. */
+function buildRegionUtterances(regionId: string, text: string, labelPrefix: string): void {
+  let speakText = text.trim()
+  if (labelPrefix) speakText = `${labelPrefix} description: ${speakText}`
+  const chunks = splitTextForTTS(speakText, 30).map(chunk => {
+    const u = new SpeechSynthesisUtterance(chunk)
+    u.rate = 1.0
+    u.lang = 'en-US'
+    return u
+  })
+  state.regionUtterances.set(regionId, chunks)
+  state.regionChunkIndex.set(regionId, 0)
+}
 
-  const sorted = [...pageData.regions].sort(
-    (a, b) => (a.reading_order ?? 0) - (b.reading_order ?? 0)
-  )
-
-  for (const region of sorted) {
-    const text = region.text || region.gemini_response || ''
-    if (!text.trim()) continue
-
-    const label = (region.label || '').toLowerCase().replace(' ', '_')
-    const isGemini = GEMINI_LABELS.has(label)
-
-    // For Gemini regions, prefix with a short label for context
-    let speakText = text.trim()
-    if (isGemini) {
-      speakText = `${region.label} description: ${speakText}`
+/** Play/Pause toggle for a region's Play button. */
+function toggleRegionPlayback(regionId: string): void {
+  if (state.activeRegionId === regionId) {
+    // This region is already active — toggle pause/resume
+    if (window.speechSynthesis.paused) {
+      window.speechSynthesis.resume()
+      setRegionButtonState(regionId, 'playing')
+      setTTSStatus('Reading…')
+    } else {
+      window.speechSynthesis.pause()
+      setRegionButtonState(regionId, 'paused')
+      setTTSStatus('Paused')
     }
+    return
+  }
 
-    // Split long text into chunks (speechSynthesis can fail on very long strings)
-    // 30 words is safe to stay under the 15-second Chrome cutoff
-    const chunks = splitTextForTTS(speakText, 30)
+  // Stop whatever else is playing and start this region from scratch
+  stopActiveRegion()
 
-    for (const chunk of chunks) {
-      const utterance = new SpeechSynthesisUtterance(chunk)
-      utterance.rate = 1.0
-      utterance.lang = 'en-US'
+  const utterances = state.regionUtterances.get(regionId)
+  if (!utterances || utterances.length === 0) return
 
-      // Store metadata for highlighting
-      const regionId = `region-${pageData.page}-${region.reading_order ?? 0}`
-      const imageUrl = pageData.debug_image_url ? `http://localhost:8000${pageData.debug_image_url}` : ''
-      
-      utterance.addEventListener('start', () => {
-        highlightRegion(regionId, true)
-        setCurrentDocumentImage(imageUrl)
-      })
-      utterance.addEventListener('end', () => highlightRegion(regionId, false))
+  state.activeRegionId = regionId
+  state.regionChunkIndex.set(regionId, 0)
+  setRegionButtonState(regionId, 'playing')
+  highlightRegion(regionId, true)
 
-      state.ttsUtterances.push(utterance)
+  // Keep-alive to prevent Chrome's 15-second silence cutoff
+  if (state.ttsKeepAliveTimer) window.clearInterval(state.ttsKeepAliveTimer)
+  state.ttsKeepAliveTimer = window.setInterval(() => {
+    if (state.activeRegionId && !window.speechSynthesis.paused) {
+      window.speechSynthesis.pause()
+      window.speechSynthesis.resume()
     }
+  }, 10000)
+
+  speakRegionChunk(regionId)
+}
+
+/** Speak one chunk; auto-advances through all chunks for the region. */
+function speakRegionChunk(regionId: string): void {
+  if (state.activeRegionId !== regionId) return
+
+  const utterances = state.regionUtterances.get(regionId)!
+  const idx = state.regionChunkIndex.get(regionId) ?? 0
+
+  if (idx >= utterances.length) {
+    stopActiveRegion()
+    setTTSStatus('Done')
+    return
+  }
+
+  const utterance = utterances[idx]
+  utterance.onend = () => {
+    if (state.activeRegionId !== regionId) return
+    state.regionChunkIndex.set(regionId, idx + 1)
+    speakRegionChunk(regionId)
+  }
+  utterance.onerror = (e) => {
+    console.error('TTS chunk error:', e)
+    if (state.activeRegionId !== regionId) return
+    state.regionChunkIndex.set(regionId, idx + 1)
+    speakRegionChunk(regionId)
+  }
+
+  const total = utterances.length
+  setTTSStatus(total > 1 ? `Reading (${idx + 1}/${total})…` : 'Reading…')
+  window.speechSynthesis.speak(utterance)
+}
+
+/** Cancel the active region's playback and reset its button. */
+function stopActiveRegion(): void {
+  window.speechSynthesis.cancel()
+  if (state.ttsKeepAliveTimer) {
+    window.clearInterval(state.ttsKeepAliveTimer)
+    state.ttsKeepAliveTimer = null
+  }
+  if (state.activeRegionId) {
+    setRegionButtonState(state.activeRegionId, 'stopped')
+    highlightRegion(state.activeRegionId, false)
+  }
+  state.activeRegionId = null
+}
+
+/** Swap the Play/Pause icon and label on a region's button. */
+function setRegionButtonState(regionId: string, mode: 'playing' | 'paused' | 'stopped'): void {
+  const block = document.getElementById(regionId)
+  if (!block) return
+  const btn     = block.querySelector<HTMLElement>('.region-play-btn')
+  const iconPl  = btn?.querySelector('.icon-play')
+  const iconPa  = btn?.querySelector('.icon-pause')
+  const lbl     = btn?.querySelector<HTMLElement>('.region-play-label')
+  if (!btn) return
+
+  if (mode === 'playing') {
+    iconPl?.classList.add('hidden')
+    iconPa?.classList.remove('hidden')
+    if (lbl) lbl.textContent = 'Pause'
+    btn.setAttribute('aria-label', 'Pause this section')
+  } else {
+    iconPl?.classList.remove('hidden')
+    iconPa?.classList.add('hidden')
+    if (lbl) lbl.textContent = mode === 'paused' ? 'Resume' : 'Play'
+    btn.setAttribute('aria-label', mode === 'paused' ? 'Resume this section' : 'Play this section')
+  }
+}
+
+function highlightRegion(regionId: string, active: boolean): void {
+  const el = document.getElementById(regionId)
+  if (!el) return
+  if (active) {
+    document.querySelectorAll('.region-block.speaking').forEach(other => other.classList.remove('speaking'))
+    el.classList.add('speaking')
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  } else {
+    el.classList.remove('speaking')
   }
 }
 
@@ -735,163 +827,53 @@ function splitTextForTTS(text: string, maxWords: number): string[] {
   return chunks
 }
 
-function startTTS(): void {
-  if (state.ttsUtterances.length === 0) return
+// ══════════════════════════════════════
+//  DOCUMENT VIEWER
+// ══════════════════════════════════════
 
-  window.speechSynthesis.cancel()
-  state.ttsCurrentIndex = 0
-  state.ttsIsSpeaking = true
-  state.ttsIsPaused = false
-  updateTTSUI('playing')
-  
-  // Start Keep-Alive to prevent Chrome from silent halting after 15s
-  if (state.ttsKeepAliveTimer) window.clearInterval(state.ttsKeepAliveTimer)
-  state.ttsKeepAliveTimer = window.setInterval(() => {
-    if (state.ttsIsSpeaking && !state.ttsIsPaused) {
-      window.speechSynthesis.pause()
-      window.speechSynthesis.resume()
-    }
-  }, 10000)
-
-  speakNext()
-}
-
-function speakNext(): void {
-  if (state.ttsCurrentIndex >= state.ttsUtterances.length) {
-    // No more utterances available right now.
-    // If pipeline is still processing, wait for more pages;
-    // otherwise, we're truly done.
-    if (state.isProcessing) {
-      // Pipeline still running — check again shortly for new utterances
-      setTTSStatus(`Waiting for next page…`)
-      setTimeout(() => {
-        if (state.ttsIsSpeaking && !state.ttsIsPaused) {
-          speakNext()
-        }
-      }, 500)
-      return
-    }
-
-    // Pipeline finished and all utterances spoken
-    state.ttsIsSpeaking = false
-    if (state.ttsKeepAliveTimer) {
-      window.clearInterval(state.ttsKeepAliveTimer)
-      state.ttsKeepAliveTimer = null
-    }
-    updateTTSUI('stopped')
-    setTTSStatus('Finished reading.')
-    return
-  }
-
-  const utterance = state.ttsUtterances[state.ttsCurrentIndex]
-
-  utterance.onend = () => {
-    state.ttsCurrentIndex++
-    if (state.ttsIsSpeaking && !state.ttsIsPaused) {
-      speakNext()
-    }
-  }
-
-  utterance.onerror = (event) => {
-    console.error('TTS error:', event)
-    state.ttsCurrentIndex++
-    if (state.ttsIsSpeaking) speakNext()
-  }
-
-  setTTSStatus(`Speaking (${state.ttsCurrentIndex + 1}/${state.ttsUtterances.length})`)
-  window.speechSynthesis.speak(utterance)
-}
-
-function pauseTTS(): void {
-  window.speechSynthesis.pause()
-  state.ttsIsPaused = true
-  updateTTSUI('paused')
-  setTTSStatus('Paused')
-}
-
-function resumeTTS(): void {
-  window.speechSynthesis.resume()
-  state.ttsIsPaused = false
-  updateTTSUI('playing')
-  setTTSStatus(`Speaking (${state.ttsCurrentIndex + 1}/${state.ttsUtterances.length})`)
-}
-
-function stopTTS(): void {
-  window.speechSynthesis.cancel()
-  state.ttsIsSpeaking = false
-  state.ttsIsPaused = false
-  state.ttsCurrentIndex = 0
-  if (state.ttsKeepAliveTimer) {
-    window.clearInterval(state.ttsKeepAliveTimer)
-    state.ttsKeepAliveTimer = null
-  }
-  updateTTSUI('stopped')
-  setTTSStatus('Stopped')
-
-  // Remove all highlights
-  document.querySelectorAll('.region-block.speaking').forEach((el) => {
-    el.classList.remove('speaking')
-  })
-}
-
-function highlightRegion(regionId: string, active: boolean): void {
-  const el = document.getElementById(regionId)
-  if (!el) return
-
-  if (active) {
-    // Remove previous highlights
-    document.querySelectorAll('.region-block.speaking').forEach((other) => {
-      other.classList.remove('speaking')
-    })
-    el.classList.add('speaking')
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  } else {
-    el.classList.remove('speaking')
-  }
-}
-
-function setCurrentDocumentImage(url: string): void {
-  const viewer = document.getElementById('docImageViewer') as HTMLImageElement
+/**
+ * Show the original uploaded document in the right pane.
+ * PDFs use an <iframe> for native browser rendering.
+ * Images use an <img>.
+ * Pass null/null to reset to the placeholder.
+ */
+function setDocumentViewer(fileId: string | null, category: string | null): void {
   const placeholder = document.getElementById('docImagePlaceholder')!
-  
-  if (!url) {
-    viewer.classList.add('hidden')
+  const pdfViewer   = document.getElementById('docPdfViewer') as HTMLIFrameElement
+  const imgViewer   = document.getElementById('docImageViewer') as HTMLImageElement
+
+  if (!fileId) {
     placeholder.classList.remove('hidden')
+    pdfViewer.classList.add('hidden')
+    imgViewer.classList.add('hidden')
+    pdfViewer.src = ''
+    imgViewer.src = ''
     return
   }
-  
-  if (viewer.src !== url) {
-    viewer.src = url
-    viewer.classList.remove('hidden')
-    placeholder.classList.add('hidden')
+
+  const docUrl = `http://localhost:8000/api/v1/document/${fileId}`
+  const isImage = category?.startsWith('IMAGE') ?? false
+
+  placeholder.classList.add('hidden')
+
+  if (isImage) {
+    pdfViewer.classList.add('hidden')
+    pdfViewer.src = ''
+    imgViewer.src = docUrl
+    imgViewer.classList.remove('hidden')
+  } else {
+    imgViewer.classList.add('hidden')
+    imgViewer.src = ''
+    // #toolbar=0&navpanes=0 hides Chrome's built-in PDF toolbar clutter
+    pdfViewer.src = docUrl + '#toolbar=0&navpanes=0'
+    pdfViewer.classList.remove('hidden')
   }
 }
 
-function updateTTSUI(mode: 'playing' | 'paused' | 'stopped'): void {
-  const playBtn = document.getElementById('ttsPlayBtn')!
-  const pauseBtn = document.getElementById('ttsPauseBtn')!
-  const resumeBtn = document.getElementById('ttsResumeBtn')!
-  const visualizer = document.getElementById('ttsVisualizer')
 
-  playBtn.classList.add('hidden')
-  pauseBtn.classList.add('hidden')
-  resumeBtn.classList.add('hidden')
 
-  if (visualizer) visualizer.classList.remove('active')
 
-  switch (mode) {
-    case 'playing':
-      pauseBtn.classList.remove('hidden')
-      if (visualizer) visualizer.classList.add('active')
-      break
-    case 'paused':
-      resumeBtn.classList.remove('hidden')
-      break
-    case 'stopped':
-      playBtn.classList.remove('hidden')
-      break
-  }
-}
+
 
 function setTTSStatus(msg: string): void {
   const el = document.getElementById('ttsStatus')
@@ -923,25 +905,21 @@ function setProgressText(label: string): void {
 }
 
 function setStatus(msg: string, type: 'info' | 'success' | 'warning' | 'error' = 'info'): void {
-  const el = document.getElementById('statusText')
+  const bar = document.getElementById('statusBar')
+  const el  = document.getElementById('statusText')
   if (!el) return
 
   el.textContent = msg
-  el.className = 'text-sm'
+  el.className = '' // clear previous colour classes
 
   switch (type) {
-    case 'success':
-      el.classList.add('text-green-400')
-      break
-    case 'warning':
-      el.classList.add('text-yellow-400')
-      break
-    case 'error':
-      el.classList.add('text-red-400')
-      break
-    default:
-      el.classList.add('text-veda-text-muted/60')
+    case 'success': el.classList.add('status-success'); break
+    case 'warning': el.classList.add('status-warning'); break
+    case 'error':   el.classList.add('status-error');   break
+    default:        el.classList.add('status-info');     break
   }
+
+  if (bar) bar.classList.remove('hidden')
 }
 // ══════════════════════════════════════
 //  AUDIO CONVERSION  (WebM → WAV)

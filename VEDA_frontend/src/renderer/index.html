@@ -5,102 +5,127 @@
     <title>VEDA — Visual Engine for Document Accessibility</title>
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: http://localhost:*; media-src 'self' blob: mediastream:; connect-src 'self' http://localhost:* https://www.google.com https://*.googleapis.com https://*.gstatic.com wss://*.google.com"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: http://localhost:*; media-src 'self' blob: mediastream:; connect-src 'self' http://localhost:* https://www.google.com https://*.googleapis.com https://*.gstatic.com wss://*.google.com; frame-src http://localhost:*"
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lora:wght@600;700&display=swap"
       rel="stylesheet"
     />
     <link href="./assets/main.css" type="text/css" rel="stylesheet" />
   </head>
 
-  <body class="font-['Inter',sans-serif] min-h-screen overflow-x-hidden overflow-y-auto select-none flex flex-col">
-    
-    <!-- Animated Background Visuals -->
-    <div id="gridOverlay"></div>
-    <div id="particleCanvas"></div>
-    
-    <!-- Main Container filling the whole screen -->
-    <div id="app" class="w-full h-full min-h-screen flex flex-col relative">
-      
+  <body>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- App Shell                                       -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div id="app">
+
+      <!-- ─── Top Bar (persistent) ─── -->
+      <header id="topBar">
+        <div id="topBarBrand">
+          <span id="topBarLogo">VEDA</span>
+          <span id="topBarTagline">Document Accessibility Engine</span>
+        </div>
+        <div id="topBarControls">
+          <!-- Font Size Controls -->
+          <div id="fontSizeControls" aria-label="Font size">
+            <button id="fontSmBtn"  class="font-size-btn" title="Small text"  aria-label="Small font size">A<sup>−</sup></button>
+            <button id="fontMdBtn"  class="font-size-btn active" title="Default text" aria-label="Default font size">A</button>
+            <button id="fontLgBtn"  class="font-size-btn" title="Large text"  aria-label="Large font size">A<sup>+</sup></button>
+          </div>
+          <!-- Theme Toggle -->
+          <button id="themeToggleBtn" aria-label="Toggle dark mode" title="Toggle dark mode">
+            <span id="themeIcon">☀</span>
+          </button>
+        </div>
+      </header>
+
       <!-- ═══════════════════════════════════════════════ -->
       <!-- PHASE 1: Upload (Home)                          -->
       <!-- ═══════════════════════════════════════════════ -->
-      <div id="phaseUpload" class="flex-1 w-full flex flex-col items-center justify-center p-12 relative min-h-screen">
-        
-        <!-- Mode Button -->
-        <div class="absolute right-12 top-1/2 -translate-y-1/2">
-          <button id="themeToggleBtn" class="w-16 h-16 rounded-full bg-[#1a7086] border-2 border-[#166074] flex items-center justify-center text-sm font-medium hover:opacity-80 transition-opacity text-white cursor-pointer z-50">
-            mode
+      <div id="phaseUpload">
+
+        <div id="uploadHero">
+          <h1 id="heroTitle">VEDA</h1>
+          <p id="heroSubtitle">Upload a document and VEDA will read it aloud — clearly and accessibly.</p>
+        </div>
+
+        <!-- Upload Zone -->
+        <div id="uploadZone" role="button" tabindex="0" aria-label="Click to upload a document">
+          <div id="uploadIcon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+          </div>
+          <p id="uploadPrimary">Click to upload a document</p>
+          <p id="uploadSecondary">PDF, PNG, JPG, TIFF, Word, and PowerPoint supported</p>
+        </div>
+
+        <!-- File selected badge -->
+        <div id="fileBadge" class="hidden">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span id="fileNameText"></span>
+        </div>
+
+        <!-- Action Buttons -->
+        <div id="optionsRow" class="hidden">
+          <button id="startBtn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Start from Page 1
+          </button>
+          <button id="voiceBtn">
+            <div id="voicePulse" class="hidden"></div>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+            <span id="voiceLabel">Go to a specific page by voice</span>
           </button>
         </div>
 
-        <h1 class="text-7xl md:text-[8rem] font-black mb-20 font-['Playfair_Display',serif] tracking-tight">
-          VEDA
-        </h1>
-        
-        <!-- Upload Zone matching the mockup pill -->
-        <div id="uploadZone" class="w-full max-w-2xl bg-[#E2E8F0] hover:bg-[#D1D5DB] transition-colors rounded-[2rem] px-12 py-12 text-center cursor-pointer shadow-sm border border-transparent">
-          <p class="text-3xl font-['Inter'] font-normal">
-            Upload your Document
-          </p>
-        </div>
-
-        <!-- Hidden badges/options preserved for backend functionality but matched to minimal style -->
-        <div id="fileBadge" class="mt-6 hidden text-lg px-6 py-2 rounded">
-          <span id="fileNameText" class="truncate font-medium"></span>
-        </div>
-
-        <div id="optionsRow" class="hidden mt-8 flex flex-col items-center gap-4">
-          <button id="startBtn" class="px-8 py-4 rounded font-medium text-xl w-full max-w-xs transition-colors">
-            Start Processing
-          </button>
-          <button id="voiceBtn" class="relative overflow-hidden px-6 py-3 rounded transition-colors text-lg font-medium">
-            <div id="voicePulse" class="absolute inset-0 bg-white/10 animate-ping hidden"></div>
-            <span id="voiceLabel" class="relative z-10">Or Speak Destination</span>
-          </button>
-        </div>
-
-        <div id="voiceFeedback" class="hidden text-center mt-4">
-          <span id="voiceTranscript" class="block font-medium text-xl"></span>
-          <span id="parsedPage" class="block text-base opacity-80"></span>
+        <!-- Voice Feedback -->
+        <div id="voiceFeedback" class="hidden">
+          <span id="voiceTranscript"></span>
+          <span id="parsedPage"></span>
         </div>
 
       </div>
 
       <!-- ═══════════════════════════════════════════════ -->
-      <!-- PHASE 2: Results (/document)                  -->
+      <!-- PHASE 2: Results (Document View)               -->
       <!-- ═══════════════════════════════════════════════ -->
-      <div id="phaseResults" class="hidden flex-1 w-full min-h-screen flex flex-row">
-        
-        <!-- Left Pane: Sections (resultsPanel) -->
-        <div class="w-1/2 flex flex-col p-8 h-screen overflow-hidden">
-          
-          <!-- Minimal TTS Controls -->
-          <div id="ttsControls" class="mb-6 flex items-center gap-3 shrink-0 rounded px-4 py-2 w-max bg-white/10">
-            <button id="ttsPlayBtn" class="font-semibold tracking-wide">PLAY</button>
-            <button id="ttsPauseBtn" class="font-semibold tracking-wide hidden">PAUSE</button>
-            <button id="ttsResumeBtn" class="font-semibold tracking-wide hidden">RESUME</button>
-            <span class="opacity-50 mx-1">|</span>
-            <button id="ttsStopBtn" class="font-semibold tracking-wide">STOP</button>
-            <span id="ttsStatus" class="ml-4 font-medium uppercase tracking-widest px-2 py-1 rounded">Ready</span>
+      <div id="phaseResults" class="hidden">
+
+        <!-- Left Pane: Text Content -->
+        <div id="leftPane">
+
+          <!-- Status line for the left pane -->
+          <div id="ttsControls">
+            <span id="ttsStatus" class="tts-status" aria-live="polite">Ready</span>
           </div>
 
-          <!-- Document Results dynamically placed here -->
-          <div id="resultsPanel" class="flex-1 overflow-y-auto pr-4 results-scroll">
+          <!-- Scrollable results content (region blocks with per-region play buttons) -->
+          <div id="resultsPanel" class="results-scroll">
             <!-- Dynamically inserted .region-block elements -->
           </div>
         </div>
 
-        <!-- Right Pane: Document Image Viewer -->
-        <div class="w-1/2 flex flex-col p-8 items-center h-screen overflow-hidden">
-          <h2 class="text-4xl mb-8 font-['Playfair_Display',serif] tracking-tight mt-4">Your Document</h2>
-          
-          <div class="flex-1 w-full flex items-center justify-center relative">
-            <p id="docImagePlaceholder" class="opacity-60 text-xl">Processing...</p>
-            <img id="docImageViewer" class="absolute inset-0 w-full h-full object-contain hidden" src="" />
+        <!-- Right Pane: Original Document Viewer -->
+        <div id="rightPane">
+          <h2 id="viewerTitle">Document Preview</h2>
+          <div id="docImageContainer">
+            <p id="docImagePlaceholder">Processing your document…</p>
+            <!-- PDF viewer (shown for PDF files) -->
+            <iframe
+              id="docPdfViewer"
+              class="hidden"
+              title="Document Preview"
+              aria-label="PDF document viewer"
+            ></iframe>
+            <!-- Image viewer (shown for image files) -->
+            <img id="docImageViewer" class="hidden" src="" alt="Document page" />
           </div>
         </div>
 
@@ -109,19 +134,19 @@
       <!-- ═══════════════════════════════════════════════ -->
       <!-- Progress Bar                                   -->
       <!-- ═══════════════════════════════════════════════ -->
-      <div id="progressContainer" class="hidden w-full max-w-2xl mx-auto absolute bottom-12 left-1/2 -translate-x-1/2 z-50">
-        <div class="w-full h-1.5">
-          <div id="progressFill" class="h-full transition-all duration-300" style="width: 0%"></div>
+      <div id="progressContainer" class="hidden">
+        <div id="progressTrack">
+          <div id="progressFill" style="width: 0%"></div>
         </div>
-        <p id="progressText" class="text-base text-center mt-3 font-medium inline-block px-4 py-1 rounded mx-auto"></p>
+        <p id="progressText" aria-live="polite"></p>
       </div>
 
       <!-- Status Bar -->
-      <div id="statusBar" class="hidden absolute bottom-4 left-1/2 -translate-x-1/2 z-50">
-        <p id="statusText" class="text-base"></p>
+      <div id="statusBar" class="hidden">
+        <p id="statusText" aria-live="polite"></p>
       </div>
 
-    </div>
+    </div><!-- /#app -->
 
     <script type="module" src="./src/renderer.ts"></script>
   </body>

@@ -77,7 +77,7 @@ app.whenReady().then(() => {
   // 2. Connects to GET /pipeline/stream/{file_id} (SSE)
   // 3. Forwards each SSE event to the renderer via webContents.send()
   // 4. Returns the initial { file_id, total_pages, ... } to the renderer immediately
-  ipcMain.handle('start-pipeline', async (_event, filePath: string, startPage: number = 1) => {
+  ipcMain.handle('start-pipeline', async (_event, filePath: string, startPage: number = 1, segments?: string | null) => {
     const mainWindow = BrowserWindow.getAllWindows()[0]
     if (!mainWindow) throw new Error('No main window found')
 
@@ -90,7 +90,13 @@ app.whenReady().then(() => {
     formData.append('file', blob, fileName)
 
     const startUrl = new URL(`${BACKEND_URL}/api/v1/pipeline/start`)
-    startUrl.searchParams.append('start_page', startPage.toString())
+
+    if (segments) {
+      // Voice-driven non-sequential mode: segments overrides start_page
+      startUrl.searchParams.append('segments', segments)
+    } else {
+      startUrl.searchParams.append('start_page', startPage.toString())
+    }
 
     const startResponse = await fetch(startUrl.toString(), {
       method: 'POST',
@@ -128,6 +134,7 @@ app.whenReady().then(() => {
     // ── Step 3: Return immediately so renderer can set up listeners ──
     return startResult
   })
+
 
   // ── IPC: Run full pipeline (single backend call) ──
   ipcMain.handle(

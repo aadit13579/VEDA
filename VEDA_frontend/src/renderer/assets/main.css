@@ -103,6 +103,37 @@ html[data-font="lg"] {
   --info-bg:    #0d2a4e;
 }
 
+/* ═══════════════════════════════════════════════════
+   ACCESSIBILITY & UTILITIES
+   ═══════════════════════════════════════════════════ */
+
+/* Global focus indicator for keyboard users (Visually Impaired aid) */
+*:focus-visible {
+  outline: 3px solid #FFD700 !important;
+  outline-offset: 2px !important;
+  border-radius: 2px;
+}
+
+/* Skip to content link (Screen reader / Keyboard navigation aid) */
+.skip-to-content {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--surface);
+  color: var(--text-primary);
+  padding: 8px 16px;
+  z-index: 9999;
+  transition: top 0.2s;
+  font-weight: 600;
+  border: 2px solid var(--border-focus);
+  border-radius: 0 0 var(--radius-sm) 0;
+  text-decoration: none;
+}
+
+.skip-to-content:focus {
+  top: 0;
+}
+
 /* ─── Global Reset ─── */
 *, *::before, *::after {
   box-sizing: border-box;
@@ -469,6 +500,47 @@ button:focus-visible {
   display: block;
   font-size: var(--font-sm);
   color: var(--text-secondary);
+}
+
+/* Voice queue summary — shows resolved page order */
+#voiceQueueSummary:not(:empty) {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--accent-dark);
+  background: var(--accent-light);
+  border: 1px solid var(--accent-mid);
+  border-radius: var(--radius-sm);
+  padding: 0.35rem 0.75rem;
+  letter-spacing: 0.01em;
+}
+
+/* Voice reject banner */
+#voiceRejectBanner:not(.hidden) {
+  display: block;
+  margin-top: 0.625rem;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--error);
+  background: var(--error-bg);
+  border: 1px solid #ef9a9a;
+  border-radius: var(--radius-sm);
+  padding: 0.4rem 0.875rem;
+}
+
+@keyframes rejectShake {
+  0%,100% { transform: translateX(0); }
+  15%      { transform: translateX(-6px); }
+  30%      { transform: translateX(6px); }
+  45%      { transform: translateX(-5px); }
+  60%      { transform: translateX(5px); }
+  75%      { transform: translateX(-3px); }
+  90%      { transform: translateX(3px); }
+}
+
+.voice-reject-shake {
+  animation: rejectShake 0.5s ease-in-out;
 }
 
 /* ═══════════════════════════════════════════════════

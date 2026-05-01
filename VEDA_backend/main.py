@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from routers import ingest, layout_analysis, spatial_sort, ocr, redis_api, gemini, pipeline
+from routers import ingest, layout_analysis, spatial_sort, ocr, redis_api, gemini, pipeline, voice_command, transcribe
 from utils.logger import get_logger
 import time
 import traceback
@@ -57,6 +57,8 @@ app.include_router(ocr.router, prefix="/api/v1", tags=["OCR"])
 app.include_router(redis_api.router, prefix="/api/v1", tags=["Redis"])
 app.include_router(gemini.router, prefix="/api/v1", tags=["Gemini"])
 app.include_router(pipeline.router, prefix="/api/v1", tags=["Pipeline"])
+app.include_router(voice_command.router, prefix="/api/v1", tags=["Voice Command"])
+app.include_router(transcribe.router, prefix="/api/v1", tags=["Transcription"])
 
 
 

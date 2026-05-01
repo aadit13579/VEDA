@@ -26,6 +26,22 @@ interface StartPipelineResult {
   category: string
   total_pages: number
   start_page: number
+  page_queue: number[]
+}
+
+// ── Voice parse types ──
+interface VoiceSegment {
+  from_page: number
+  to_page: number        // -1 = 'end'
+  from_section: number | null
+  to_section:   number | null
+}
+interface VoiceParseResponse {
+  valid: boolean
+  reject_reason?: string
+  segments?: VoiceSegment[]
+  pipeline_segments?: string          // e.g. '5-7,1-3'
+  section_filter?: Record<string, [number, number]>  // pageNum → [from, to]
 }
 
 interface PageReadyEvent {
@@ -64,21 +80,22 @@ interface PipelineEvent {
 interface VedaState {
   filePath: string | null
   fileName: string | null
-  fileId: string | null        // returned by /pipeline/start
-  fileCategory: string | null  // PDF_DIGITAL, IMAGE, etc.
+  fileId: string | null
+  fileCategory: string | null
   startPage: number
   isProcessing: boolean
   isListening: boolean
+  // Voice navigation
+  pipelineSegments: string | null                          // e.g. '5-7,1-3'
+  sectionFilter: Record<string, [number, number]> | null   // pageNum→[fromSec,toSec]
   // Per-region TTS
-  activeRegionId: string | null      // which region is currently speaking
-  regionUtterances: Map<string, SpeechSynthesisUtterance[]>  // regionId → chunks
-  regionChunkIndex: Map<string, number>                       // regionId → next chunk index
-  // Keep-alive timer (prevents Chrome 15-second TTS cutoff)
+  activeRegionId: string | null
+  regionUtterances: Map<string, SpeechSynthesisUtterance[]>
+  regionChunkIndex: Map<string, number>
   ttsKeepAliveTimer: number | null
-  // Audio recording
+  // Audio recording (MediaRecorder)
   mediaRecorder: MediaRecorder | null
   audioChunks: Blob[]
-  // Pipeline event listener cleanup
   pipelineEventCleanup: (() => void) | null
 }
 
@@ -90,6 +107,8 @@ const state: VedaState = {
   startPage: 1,
   isProcessing: false,
   isListening: false,
+  pipelineSegments: null,
+  sectionFilter: null,
   activeRegionId: null,
   regionUtterances: new Map(),
   regionChunkIndex: new Map(),
@@ -184,7 +203,59 @@ function init(): void {
     setupStart()
     setupTTS()
     setupHistory()
+    setupNewDocBtn()
     checkBackendHealth()
+  })
+}
+
+// ── Reset to Upload ──
+function setupNewDocBtn(): void {
+  const newDocBtn = document.getElementById('newDocBtn')
+  if (!newDocBtn) return
+
+  newDocBtn.addEventListener('click', () => {
+    // Cancel any ongoing audio/processing
+    window.speechSynthesis.cancel()
+    if (state.pipelineEventCleanup) {
+      state.pipelineEventCleanup()
+      state.pipelineEventCleanup = null
+    }
+
+    // Reset state
+    state.fileId = null
+    state.filePath = null
+    state.fileName = ''
+    state.activeRegionId = null
+    state.regionUtterances.clear()
+    state.regionChunkIndex.clear()
+    state.isProcessing = false
+
+    // Reset UI visibility
+    document.getElementById('phaseUpload')?.classList.remove('hidden')
+    document.getElementById('phaseResults')?.classList.add('hidden')
+    document.getElementById('newDocBtn')?.classList.add('hidden')
+    document.getElementById('progressContainer')?.classList.add('hidden')
+
+    // Clear upload state
+    document.getElementById('fileBadge')?.classList.add('hidden')
+    document.getElementById('optionsRow')?.classList.add('hidden')
+    document.getElementById('voiceFeedback')?.classList.add('hidden')
+
+    // Clear results
+    const resultsPanel = document.getElementById('resultsPanel')
+    if (resultsPanel) resultsPanel.innerHTML = ''
+
+    // Rebuild image viewer container to clear past images
+    const docImageContainer = document.getElementById('docImageContainer')
+    if (docImageContainer) {
+      docImageContainer.innerHTML = `
+        <p id="docImagePlaceholder">Processing your document…</p>
+        <iframe id="docPdfViewer" class="hidden" title="Document Preview" aria-label="PDF document viewer"></iframe>
+        <img id="docImageViewer" class="hidden" src="" alt="Document page" />
+      `
+    }
+
+    setStatus('Ready to upload a document.', 'info')
   })
 }
 
@@ -240,7 +311,7 @@ function setupUpload(): void {
 }
 
 // ══════════════════════════════════════
-//  VOICE COMMAND  (Web Speech API)
+//  VOICE COMMAND  (MediaRecorder → WAV → backend /transcribe)
 // ══════════════════════════════════════
 function setupVoice(): void {
   const voiceBtn = document.getElementById('voiceBtn')!
@@ -248,7 +319,7 @@ function setupVoice(): void {
   voiceBtn.addEventListener('click', async () => {
     if (state.isProcessing) return
 
-    // If already recording, stop it
+    // If already recording — stop
     if (state.isListening) {
       if (state.mediaRecorder && state.mediaRecorder.state === 'recording') {
         state.mediaRecorder.stop()
@@ -256,108 +327,86 @@ function setupVoice(): void {
       return
     }
 
-    // Start recording via MediaRecorder
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
 
-      // Find a supported MIME type
+      // Pick best supported MIME type
       let mimeType = 'audio/webm;codecs=opus'
       if (!MediaRecorder.isTypeSupported(mimeType)) {
         mimeType = 'audio/webm'
-        if (!MediaRecorder.isTypeSupported(mimeType)) {
-          mimeType = '' // browser default
-        }
+        if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = ''
       }
 
-      const mediaRecorder = new MediaRecorder(
-        stream,
-        mimeType ? { mimeType } : undefined
-      )
-
+      const mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined)
       state.mediaRecorder = mediaRecorder
-      state.audioChunks = []
-      state.isListening = true
+      state.audioChunks   = []
+      state.isListening   = true
       updateVoiceUI(true)
 
-      mediaRecorder.ondataavailable = (event: BlobEvent) => {
-        if (event.data.size > 0) {
-          state.audioChunks.push(event.data)
-        }
+      mediaRecorder.ondataavailable = (e: BlobEvent) => {
+        if (e.data.size > 0) state.audioChunks.push(e.data)
       }
 
       mediaRecorder.onstop = async () => {
-        // Release the microphone
-        stream.getTracks().forEach((track) => track.stop())
-
+        stream.getTracks().forEach(t => t.stop())   // release mic
         state.isListening = false
         updateVoiceUI(false)
 
-        // Combine chunks into a single blob
         const audioBlob = new Blob(state.audioChunks, { type: 'audio/webm' })
-
         if (audioBlob.size === 0) {
           setStatus('No audio recorded. Try again.', 'warning')
           return
         }
 
-        setStatus('Transcribing your voice command…', 'info')
-
+        setStatus('Transcribing…', 'info')
         try {
-          // Convert WebM to WAV (SpeechRecognition backend needs WAV)
+          // WebM → 16 kHz mono WAV  (backend expects WAV)
           const wavBuffer = await convertBlobToWav(audioBlob)
 
-          // Send WAV audio to backend for transcription via IPC
           const transcript: string = await window.electron.ipcRenderer.invoke(
             'transcribe-audio',
             wavBuffer
           )
 
-          console.log('Voice transcript:', transcript)
+          console.log('Transcript:', transcript, '(length:', transcript.length, ')')
 
-          const voiceFeedback = document.getElementById('voiceFeedback')!
-          const voiceTranscript = document.getElementById('voiceTranscript')!
-          const parsedPage = document.getElementById('parsedPage')!
+          if (!transcript.trim()) {
+            setStatus('No speech detected. Try again.', 'warning')
+            return
+          }
 
-          voiceFeedback.classList.remove('hidden')
-          voiceTranscript.textContent = `"${transcript}"`
+          showVoiceTranscript(transcript)
+          setStatus('Parsing voice command…', 'info')
 
-          // Parse page number from transcript
-          const pageNum = parsePageNumber(transcript.toLowerCase())
-          if (pageNum !== null) {
-            state.startPage = pageNum
-            parsedPage.textContent = `Starting from page ${pageNum}.`
-            setStatus(
-              `Voice recognised — starting from page ${pageNum}.`,
-              'info'
-            )
-            // Auto-start pipeline
-            runPipeline()
+          const parsed = await parseVoiceCommand(transcript)
+          if (!parsed.valid) {
+            showVoiceReject(parsed.reject_reason ?? 'Invalid command.')
+            setStatus(`Voice rejected: ${parsed.reject_reason}`, 'warning')
           } else {
-            parsedPage.textContent = 'Could not detect a page number. Try again.'
-            setStatus(
-              'No page number detected. Try saying "go to page 3".',
-              'warning'
-            )
+            state.pipelineSegments = parsed.pipeline_segments ?? null
+            state.sectionFilter    = parsed.section_filter   ?? null
+            state.startPage        = parsed.segments?.[0]?.from_page ?? 1
+            showVoiceQueue(parsed)
+            setStatus(`Voice parsed — pages: ${parsed.pipeline_segments}. Starting…`, 'info')
+            runPipeline()
           }
         } catch (err) {
-          console.error('Transcription error:', err)
-          setStatus('Transcription failed. Please try again.', 'error')
+          console.error('Voice pipeline error:', err)
+          setStatus('Voice command failed. Is the backend running?', 'error')
         }
       }
 
-      // Start recording
       mediaRecorder.start()
-      setStatus('Recording… click the button again to stop.', 'info')
+      setStatus('Recording… speak your command, then click the button again to stop.', 'info')
 
-      // Auto-stop after 8 seconds to prevent endless recording
+      // Auto-stop after 8 s so the user doesn’t have to remember to click
       setTimeout(() => {
-        if (mediaRecorder.state === 'recording') {
-          mediaRecorder.stop()
-        }
+        if (state.mediaRecorder?.state === 'recording') state.mediaRecorder.stop()
       }, 8000)
+
     } catch (err) {
-      console.error('Microphone access error:', err)
-      setStatus('Microphone access denied. Please check your permissions.', 'error')
+      console.error('Mic error:', err)
+      setStatus('Microphone access denied. Check your permissions.', 'error')
       state.isListening = false
       updateVoiceUI(false)
     }
@@ -380,50 +429,65 @@ function updateVoiceUI(recording: boolean): void {
   }
 }
 
-function parsePageNumber(transcript: string): number | null {
-  // Word → digit mapping
-  const wordToNum: Record<string, number> = {
-    one: 1,
-    two: 2,
-    three: 3,
-    four: 4,
-    five: 5,
-    six: 6,
-    seven: 7,
-    eight: 8,
-    nine: 9,
-    ten: 10,
-    eleven: 11,
-    twelve: 12,
-    thirteen: 13,
-    fourteen: 14,
-    fifteen: 15,
-    sixteen: 16,
-    seventeen: 17,
-    eighteen: 18,
-    nineteen: 19,
-    twenty: 20
+// ══════════════════════════════════════
+//  VOICE COMMAND PARSER  (calls backend)
+// ══════════════════════════════════════
+
+/** POST /voice/parse — returns structured command or rejection. */
+async function parseVoiceCommand(transcript: string): Promise<VoiceParseResponse> {
+  const res = await fetch('http://localhost:8000/api/v1/voice/parse', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ transcript }),
+  })
+  if (!res.ok) throw new Error(`/voice/parse returned ${res.status}`)
+  return res.json() as Promise<VoiceParseResponse>
+}
+
+/** Show the raw transcript in the feedback panel. */
+function showVoiceTranscript(transcript: string): void {
+  const fb = document.getElementById('voiceFeedback')!
+  const el = document.getElementById('voiceTranscript')!
+  fb.classList.remove('hidden')
+  el.textContent = `"${transcript}"`
+  document.getElementById('parsedPage')!.textContent = ''
+  document.getElementById('voiceQueueSummary')!.textContent = ''
+  document.getElementById('voiceRejectBanner')!.classList.add('hidden')
+  document.getElementById('voiceRejectBanner')!.classList.remove('voice-reject-shake')
+}
+
+/** Show the parsed queue in the feedback panel. */
+function showVoiceQueue(parsed: VoiceParseResponse): void {
+  const summary = document.getElementById('voiceQueueSummary')!
+  const parsedPage = document.getElementById('parsedPage')!
+
+  // Build readable page order string
+  const pages: string[] = []
+  for (const seg of parsed.segments ?? []) {
+    const to = seg.to_page === -1 ? 'end' : String(seg.to_page)
+    const range = seg.from_page === seg.to_page ? String(seg.from_page) : `${seg.from_page}–${to}`
+    const secPart = seg.from_section != null
+      ? ` (sec ${seg.from_section}${seg.to_section !== seg.from_section ? '–' + seg.to_section : ''})`
+      : ''
+    pages.push(`Page ${range}${secPart}`)
   }
 
-  // Try digit match: "page 5", "page 12"
-  const digitMatch = transcript.match(/page\s+(\d+)/)
-  if (digitMatch) {
-    return parseInt(digitMatch[1], 10)
-  }
+  summary.textContent = pages.join(' → ')
+  parsedPage.textContent = `Queue: ${parsed.pipeline_segments}`
+}
 
-  // Try word match: "page five", "page three"
-  const wordMatch = transcript.match(/page\s+([a-z]+)/)
-  if (wordMatch && wordToNum[wordMatch[1]]) {
-    return wordToNum[wordMatch[1]]
-  }
-
-  // Try just a number in the string
-  const anyDigit = transcript.match(/(\d+)/)
-  if (anyDigit) {
-    return parseInt(anyDigit[1], 10)
-  }
-
-  return null
+/** Show rejection banner with shake animation. */
+function showVoiceReject(reason: string): void {
+  const banner = document.getElementById('voiceRejectBanner')!
+  banner.textContent = `⚠ ${reason}`
+  banner.classList.remove('hidden')
+  // Trigger shake — remove then re-add class
+  banner.classList.remove('voice-reject-shake')
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => banner.classList.add('voice-reject-shake'))
+  })
+  document.getElementById('parsedPage')!.textContent = ''
+  document.getElementById('voiceQueueSummary')!.textContent = ''
 }
 
 // ══════════════════════════════════════
@@ -439,7 +503,10 @@ function setupStart(): void {
     }
     if (state.isProcessing) return
 
-    state.startPage = 1
+    // Full document — clear any voice-set segments/filters
+    state.startPage        = 1
+    state.pipelineSegments = null
+    state.sectionFilter    = null
     runPipeline()
   })
 }
@@ -453,7 +520,6 @@ async function runPipeline(): Promise<void> {
   state.isProcessing = true
   window.speechSynthesis.cancel()
 
-  // Reset TTS state
   state.activeRegionId = null
   state.regionUtterances.clear()
   state.regionChunkIndex.clear()
@@ -464,50 +530,49 @@ async function runPipeline(): Promise<void> {
   voiceBtn.setAttribute('disabled', 'true')
   showProgress(true)
 
-  // Prepare results panel for incremental rendering
   const phaseResults = document.getElementById('phaseResults')!
   const resultsPanel = document.getElementById('resultsPanel')!
   phaseResults.classList.remove('hidden')
   resultsPanel.innerHTML = ''
 
-  // Reset document viewer
   setDocumentViewer(null, null)
 
-  // Start indeterminate progress bar + elapsed timer
   const progressFill = document.getElementById('progressFill')!
   progressFill.classList.add('progress-indeterminate')
   const startTime = Date.now()
+
+  // Label for progress — show segments string if available, else start page
+  const modeLabel = state.pipelineSegments
+    ? `pages ${state.pipelineSegments}`
+    : `from page ${state.startPage}`
+
   const timerInterval = setInterval(() => {
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(0)
-    setProgressText(
-      `Processing "${state.fileName}" from page ${state.startPage}… (${elapsed}s)`
-    )
+    setProgressText(`Processing "${state.fileName}" (${modeLabel})… (${elapsed}s)`)
   }, 1000)
-  setProgressText(`Processing "${state.fileName}" from page ${state.startPage}…`)
+  setProgressText(`Processing "${state.fileName}" (${modeLabel})…`)
   setStatus('Analysing document — pages will appear as they are ready.', 'info')
 
   try {
-    // Clean up any previous pipeline listener
     if (state.pipelineEventCleanup) {
       state.pipelineEventCleanup()
       state.pipelineEventCleanup = null
     }
 
-    // Register SSE listener
     const cleanup = window.electron.ipcRenderer.on('pipeline-event', (_event, pipelineEvent: PipelineEvent) => {
       handlePipelineEvent(pipelineEvent, timerInterval, progressFill, startTime)
     })
     state.pipelineEventCleanup = cleanup
 
-    // Start pipeline
+    // Build IPC args — pass segments string when available
     const startResult: StartPipelineResult = await window.electron.ipcRenderer.invoke(
       'start-pipeline',
       state.filePath,
-      state.startPage
+      state.startPage,
+      state.pipelineSegments   // new optional 3rd arg — undefined when not set
     )
 
-    // Capture file_id and show original document immediately
-    state.fileId = startResult.file_id
+    state.fileId       = startResult.file_id
     state.fileCategory = startResult.category
     setDocumentViewer(startResult.file_id, startResult.category)
 
@@ -520,12 +585,10 @@ async function runPipeline(): Promise<void> {
   } catch (err) {
     clearInterval(timerInterval)
     progressFill.classList.remove('progress-indeterminate')
-
     const message = err instanceof Error ? err.message : String(err)
     setStatus(`Processing failed: ${message}`, 'error')
     setProgress(0, 'Failed')
     console.error('Pipeline start error:', err)
-
     finishPipeline()
   }
 }
@@ -615,19 +678,27 @@ function finishPipeline(): void {
 function renderPage(pageData: PipelinePage): void {
   const resultsPanel = document.getElementById('resultsPanel')!
 
+  // Section filter: [fromSec, toSec] (1-indexed reading_order) or null
+  const sf = state.sectionFilter?.[String(pageData.page)] ?? null
+
   const pageDiv = document.createElement('div')
   pageDiv.className = 'page-block'
 
   const title = document.createElement('div')
   title.className = 'page-title'
-  title.textContent = `Page ${pageData.page}`
+  title.textContent = sf
+    ? `Page ${pageData.page}  (sections ${sf[0]}–${sf[1]})`
+    : `Page ${pageData.page}`
   pageDiv.appendChild(title)
 
   const sorted = [...pageData.regions].sort(
     (a, b) => (a.reading_order ?? 0) - (b.reading_order ?? 0)
   )
 
+  // reading_order is 0-indexed in data; compare as 1-indexed for the filter
   for (const region of sorted) {
+    const regionOrder1 = (region.reading_order ?? 0) + 1
+    if (sf && (regionOrder1 < sf[0] || regionOrder1 > sf[1])) continue
     const text = region.text || region.gemini_response || ''
     if (!text.trim()) continue
 
@@ -1098,6 +1169,7 @@ async function loadHistoryDocument(item: HistoryItem): Promise<void> {
     
     phaseUpload.classList.add('hidden')
     phaseResults.classList.remove('hidden')
+    document.getElementById('newDocBtn')?.classList.remove('hidden')
     resultsPanel.innerHTML = ''
     
     // Show document in viewer

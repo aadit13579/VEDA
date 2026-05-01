@@ -43,7 +43,7 @@ import time
 import traceback
 import uuid
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any
+from typing import Any, Optional
 
 import cv2
 import filetype
@@ -110,6 +110,66 @@ logger.info(
 # Filled by background tasks, consumed by the SSE endpoint.
 
 _active_pipelines: dict[str, asyncio.Queue] = {}
+
+
+# ── Segments parser ───────────────────────────────────────────────────────────
+
+def _parse_segments_str(segments_str: str, total_pages: int) -> list[int]:
+    """
+    Convert a segment string produced by POST /voice/parse into an ordered,
+    deduplicated list of 1-indexed page numbers.
+
+    Syntax: comma-separated items, each being one of:
+      "N"       → single page N
+      "N-M"     → pages N through M (inclusive)
+      "N-end"   → pages N through total_pages (inclusive)
+
+    Examples:
+      "5-7,1-3"    → [5, 6, 7, 1, 2, 3]
+      "5-end,1"    → [5, 6, 7, …, total_pages, 1]
+      "3"          → [3]
+    """
+    pages: list[int] = []
+    seen: set[int] = set()
+
+    for part in segments_str.split(","):
+        part = part.strip()
+        if not part:
+            continue
+
+        if "-" in part:
+            left, right = part.split("-", 1)
+            try:
+                from_p = int(left.strip())
+            except ValueError:
+                logger.warning(f"[SEGMENTS] Invalid from-page '{left}' — skipped")
+                continue
+
+            if right.strip().lower() == "end":
+                to_p = total_pages
+            else:
+                try:
+                    to_p = int(right.strip())
+                except ValueError:
+                    logger.warning(f"[SEGMENTS] Invalid to-page '{right}' — skipped")
+                    continue
+
+            for p in range(from_p, to_p + 1):
+                if 1 <= p <= total_pages and p not in seen:
+                    pages.append(p)
+                    seen.add(p)
+        else:
+            # Single page
+            try:
+                p = int(part)
+            except ValueError:
+                logger.warning(f"[SEGMENTS] Invalid page token '{part}' — skipped")
+                continue
+            if 1 <= p <= total_pages and p not in seen:
+                pages.append(p)
+                seen.add(p)
+
+    return pages
 
 
 # ── SSE event helper ─────────────────────────────────────────────────────────
@@ -478,10 +538,10 @@ async def _run_pipeline_background(
     original_filename: str,
     file_path: str,
     category: str,
-    start_page: int,
     total_pages: int,
     images: list,
     queue: asyncio.Queue,
+    page_queue: list[int],          # ordered, 1-indexed pages to process
 ) -> None:
     """
     Background coroutine that processes pages one-by-one and pushes SSE
@@ -497,10 +557,11 @@ async def _run_pipeline_background(
     pages_processed = 0
 
     try:
-        pages_to_process = list(range(start_page - 1, total_pages))  # 0-indexed
+        # page_queue is already 1-indexed; convert to 0-indexed for image list
+        pages_to_process_1idx = page_queue
 
-        for page_idx in pages_to_process:
-            page_num = page_idx + 1  # 1-indexed
+        for page_num in pages_to_process_1idx:
+            page_idx = page_num - 1
             page_t0 = time.time()
 
             # ── Layout Analysis (YOLO) for this page ─────────────────────────
@@ -650,7 +711,16 @@ async def _run_pipeline_background(
 @router.post("/pipeline/start")
 async def start_pipeline(
     file: UploadFile = File(...),
-    start_page: int = Query(1, ge=1, description="1-indexed page to start from"),
+    start_page: int = Query(1, ge=1, description="1-indexed page to start from (ignored when segments is set)"),
+    end_page: Optional[int] = Query(None, ge=1, description="Last page to process (inclusive). Defaults to total_pages."),
+    segments: Optional[str] = Query(
+        None,
+        description=(
+            "Comma-separated page ranges produced by POST /voice/parse. "
+            "Overrides start_page / end_page when supplied. "
+            "Format: '5-7,1-3' or '5-end,1'."
+        ),
+    ),
 ) -> dict:
     """
     Upload a document and kick off the processing pipeline in the background.
@@ -700,11 +770,31 @@ async def start_pipeline(
     images = pdf_to_images(file_bytes)
     total_pages = len(images)
 
-    if start_page > total_pages:
-        _cleanup(file_id, file_path)
-        raise HTTPException(
-            status_code=400,
-            detail=f"start_page={start_page} exceeds total pages ({total_pages}).",
+    # ── Resolve page_queue from segments / start_page / end_page ────────────
+    if segments:
+        page_queue = _parse_segments_str(segments, total_pages)
+        if not page_queue:
+            _cleanup(file_id, file_path)
+            raise HTTPException(
+                status_code=400,
+                detail=f"segments='{segments}' produced no valid pages for a "
+                       f"{total_pages}-page document.",
+            )
+        logger.info(
+            f"   [START] Segments '{segments}' resolved to pages: {page_queue}"
+        )
+    else:
+        # Legacy start_page / end_page mode
+        if start_page > total_pages:
+            _cleanup(file_id, file_path)
+            raise HTTPException(
+                status_code=400,
+                detail=f"start_page={start_page} exceeds total pages ({total_pages}).",
+            )
+        effective_end = min(end_page, total_pages) if end_page else total_pages
+        page_queue = list(range(start_page, effective_end + 1))
+        logger.info(
+            f"   [START] Linear mode pages {start_page}–{effective_end}: {page_queue}"
         )
 
     # Create the SSE queue and launch background task
@@ -717,17 +807,17 @@ async def start_pipeline(
             original_filename=file.filename,
             file_path=file_path,
             category=category,
-            start_page=start_page,
             total_pages=total_pages,
             images=images,
             queue=queue,
+            page_queue=page_queue,
         )
     )
 
     elapsed = (time.time() - step_start) * 1000
     logger.info(
         f"🚀 PIPELINE STARTED — file_id={file_id}, category={category}, "
-        f"total_pages={total_pages}, start_page={start_page} "
+        f"total_pages={total_pages}, page_queue={page_queue} "
         f"(upload took {elapsed:.1f}ms)"
     )
 
@@ -737,7 +827,8 @@ async def start_pipeline(
         "filename": file.filename,
         "category": category,
         "total_pages": total_pages,
-        "start_page": start_page,
+        "page_queue": page_queue,
+        "start_page": page_queue[0] if page_queue else start_page,
     }
 
 

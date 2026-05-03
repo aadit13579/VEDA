@@ -2,39 +2,36 @@
 
 VEDA is a robust, modular, and state-driven pipeline designed for complex document processing and semantic analysis. It breaks down scanned digital documents and multi-page PDFs, analyzes their structural layout, accurately determines reading order through geometry, dynamically performs Optical Character Recognition (OCR), and enriches visual elements (like charts or figures) using Large Vision-Language Models (LVLMs) like Gemini.
 
-Current State: **Backend Core Complete**
+Current State: **Class-Based Architecture & Streaming Pipeline Complete**
 
 ## Architecture Pipeline
 
-The VEDA Backend operates as a series of disconnected, independent FastAPI micro-routers. Rather than forcing a file through a rigid in-memory sequence of functions, each stage runs independently and interacts with a centralized **Redis Session State**.
+The VEDA Backend operates as a series of independent FastAPI micro-routers built upon a **strict class-based, SOLID architecture**. Rather than forcing a file through a rigid in-memory sequence of functions, it utilizes a highly-concurrent, page-by-page **Server-Sent Events (SSE) Streaming Pipeline** backed by a centralized **Redis Session State**.
 
 1. **Ingest (Upload & Identify):**
-   - Receives raw PDFs or images (`POST /upload`).
+   - Receives raw PDFs or images (`POST /pipeline/start`).
    - Determines if the file is a digital PDF or a scanned PDF.
-   - Saves the file to disk and generates a unique `file_id`.
+   - Generates a unique `file_id` and immediately returns to the client to establish a streaming connection.
 
 2. **Layout Analysis:**
    - Powered by **DocLayout-YOLO**.
-   - Takes an image/page and generates bounding boxes for regions like `title`, `text`, `figure`, `table`, `caption`, etc.
+   - Takes a page and generates bounding boxes for regions like `title`, `text`, `figure`, `table`, `caption`, etc.
    - Outputs the raw geometrical structure to Redis.
 
 3. **Spatial Sorting (Reading Order):**
    - Implements a dynamic **Recursive X-Y Cut** algorithm.
    - Calculates the structural gaps between regions to dynamically detect if a page is a single column or multi-column layout.
-   - Reorders the bounding boxes into a logical human `reading_order` and updates the Redis state.
+   - Reorders the bounding boxes into a logical human `reading_order`.
 
-4. **Dynamic Context Gathering & OCR:**
-   - Powered by **Tesseract OCR**.
-   - Traditional pipelines OCR entire pages upfront. VEDA targets specific bounding boxes. 
+4. **Highly Concurrent Region Processing (OCR & Gemini):**
+   - Within each page, *all* regions are processed concurrently using asynchronous thread pools.
+   - **Text Regions:** Uses a fallback chain: PyMuPDF (native PDF text) → Tesseract OCR → Gemini OCR fallback.
+   - **Visual Regions:** Handled by Gemini 2.5 Flash. It accepts an image bounding box, gathers surrounding contextual text natively, and asks Gemini to provide a comprehensive explanation of the visual material.
 
-5. **LVLM Visual Explanation (Gemini Engine):**
-   - Powered by **Gemini 2.5 Flash**.
-   - Accepts a single image bounding box, gathers the surrounding contextual text natively, and asks Gemini to provide a comprehensive explanation of the visual material, factoring in the document's surrounding text.
-
-6. **Finalization:**
-   - Aggregates the Redis cache for all pages.
-   - Compiles a final JSON structural map of the document.
-   - Cleans up temporary Redis keys.
+5. **SSE Streaming & Finalization:**
+   - As each page completes processing, a `page_ready` event is pushed to the frontend via Server-Sent Events, enabling instant Text-To-Speech playback without waiting for the whole document.
+   - Once all pages are done, a final JSON structural map of the document is compiled and saved to disk (Iceberg Storage).
+   - Temporary Redis keys are cleaned up.
 
 ---
 
@@ -44,13 +41,13 @@ VEDA departs from traditional linear document parsers in three distinct ways:
 
 ### 1. Redis-Backed Distributed State & BBox Tolerance
 Intermediate steps don't pass massive JSON blobs to one another. Each module reads from and writes to **Redis**. 
-Because ML models are imperfect, VEDA implements a `bbox_matches(a, b, tolerance=5)` algorithm. This allows independent pipeline stages (like Spatial Sort or OCR) to fetch a region, update its content (e.g., adding `reading_order` or `text`), and merge it back into the cached Redis layout even if the bounding box coordinates drift slightly between transformations.
+Because ML models are imperfect, VEDA implements a `bbox_matches(a, b, tolerance=5)` algorithm. This allows independent pipeline stages to fetch a region, update its content, and merge it back into the cached Redis layout even if the bounding box coordinates drift slightly between transformations.
 
 ### 2. Mathematics-Driven Image Contextualization (Spatial Scoring)
 When sending an extracted diagram to an AI like Gemini for explanation, passing the *entire* text of a page breaks token limits and causes hallucination. VEDA uses a rigorous **Spatial Proximity Scoring** algorithm to select only the most relevant text context for the image:
-*   **Normalized Distance**: It calculates the Manhattan distance between the center of the image and the center of every text block, normalized by the page's diagonal. *This ensures distance-weighting scales flawlessly whether it's a massive A3 scan or a mobile screenshot.*
-*   **Column Alignment Check**: It identifies horizontal overlap. If a text block shares >30% horizontal space with the image, it's flagged as being in the "same column" and receives a massive relevance boost (+100).
-*   **Directional Vertical Bias**: Humans put captions *below* images and explanations *above* them. VEDA adds a +40 bonus to text located below the image, and a +20 bonus to text above, completely ignoring text floating off to the side in adjacent columns.
+*   **Normalized Distance**: Calculates the Manhattan distance between the center of the image and the center of every text block, normalized by the page's diagonal.
+*   **Column Alignment Check**: Identifies horizontal overlap. If a text block shares >30% horizontal space with the image, it's flagged as being in the "same column" and receives a relevance boost (+100).
+*   **Directional Vertical Bias**: Humans put captions *below* images and explanations *above* them. VEDA adds a +40 bonus to text located below the image, and a +20 bonus to text above.
 
 ### 3. "Just-In-Time" (Lazy) OCR Evaluation
 Traditional pipelines OCR an entire page, which is tremendously slow and computationally expensive. VEDA does not. 
@@ -64,8 +61,8 @@ This **Lazy Evaluation** ensures that VEDA does zero wasted mathematical operati
 ---
 
 ## Tech Stack
-*   **Backend Framework**: FastAPI (Python)
+*   **Backend Framework**: FastAPI (Python), asyncio, Server-Sent Events (SSE)
 *   **Machine Learning**: Ultralytics (DocLayout-YOLO), OpenCV, NumPy
-*   **OCR Engine**: Tesseract OCR
-*   **LLM Engine**: Google GenAI SDK (Gemini 2.0 Flash)
-*   **Data Persistence**: Redis (Dockerized), JSON Storage
+*   **OCR Engines**: PyMuPDF (fitz), Tesseract OCR
+*   **LLM Engine**: Google GenAI SDK (Gemini 2.5 Flash)
+*   **Data Persistence**: Redis (Working Memory), JSON Storage (Iceberg)

@@ -1,56 +1,63 @@
 @import "tailwindcss";
 
-/* ── VEDA Custom Theme ── */
-@theme {
-  --color-veda-bg: #0a0e1a;
-  --color-veda-surface: #111827;
-  --color-veda-surface-hover: #1e293b;
-  --color-veda-border: #1e293b;
-  --color-veda-border-hover: #6366f1;
-  --color-veda-accent: #6366f1;
-  --color-veda-accent-light: #818cf8;
-  --color-veda-text: #f1f5f9;
-  --color-veda-text-muted: #94a3b8;
-  --color-veda-danger: #ef4444;
-  --color-veda-success: #22c55e;
+:root {
+  --color-veda-blue: #2692ac;
+  --color-veda-text-main: #0f172a;
+  --color-veda-text-sec: #334155;
 }
 
-/* ── Pulse animation for mic recording ── */
-@keyframes pulse-ring {
-  0% {
-    transform: scale(1);
-    opacity: 0.6;
-  }
-  100% {
-    transform: scale(1.5);
-    opacity: 0;
-  }
+body {
+  background-color: var(--color-veda-blue);
+  color: var(--color-veda-text-main);
+  font-family: "Inter", sans-serif;
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-6px); }
-}
-
-.animate-pulse-ring {
-  animation: pulse-ring 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-
-/* ── Scrollbar styling ── */
 ::-webkit-scrollbar {
   width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--color-veda-bg);
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-veda-border);
+  background: rgba(15, 23, 42, 0.2);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-veda-accent);
+  background: rgba(15, 23, 42, 0.4);
+}
+
+.region-block {
+  margin-bottom: 1.5rem;
+}
+
+.region-label {
+  font-size: 1.1rem;
+  color: var(--color-veda-text-main);
+  margin-bottom: 0.5rem;
+}
+
+.region-text {
+  background-color: #e2e8f0;
+  padding: 1.5rem;
+  color: var(--color-veda-text-sec);
+  min-height: 100px;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.region-block.speaking .region-text {
+  background-color: #ffffff;
+  outline: 2px solid var(--color-veda-text-main);
+}
+
+.page-title {
+  display: none;
+}
+
+#ttsVisualizer {
+  display: none !important;
+}
+
+#themeToggleBtn {
+  display: none !important;
 }

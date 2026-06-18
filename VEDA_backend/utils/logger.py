@@ -22,8 +22,11 @@ def get_logger(name="VEDA_API"):
         c_handler.setLevel(logging.INFO) # Default console to INFO
         c_handler.setFormatter(log_format)
         
-        # Rotating file handler
-        f_handler = RotatingFileHandler('app.log', maxBytes=5*1024*1024, backupCount=3) # 5MB per file
+        # Rotating file handler — UTF-8 encoding so emoji/Unicode log messages
+        # don't silently fail on Windows (cp1252 default would drop them).
+        f_handler = RotatingFileHandler(
+            'app.log', maxBytes=5*1024*1024, backupCount=3, encoding='utf-8'
+        )
         f_handler.setLevel(logging.DEBUG) # Save all logs to file
         f_handler.setFormatter(log_format)
         

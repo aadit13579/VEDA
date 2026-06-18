@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 import os
+import cv2
 import glob
 import cv2
 from services.layout_engine import pdf_to_images, analyze_layout, draw_layout_on_image

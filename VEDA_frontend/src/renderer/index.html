@@ -5,115 +5,118 @@
     <title>VEDA — Visual Engine for Document Accessibility</title>
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; media-src 'self' blob:; connect-src 'self' http://localhost:*"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: http://localhost:*; media-src 'self' blob: mediastream:; connect-src 'self' http://localhost:* https://www.google.com https://*.googleapis.com https://*.gstatic.com wss://*.google.com"
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap"
       rel="stylesheet"
     />
     <link href="./assets/main.css" type="text/css" rel="stylesheet" />
   </head>
 
-  <body class="bg-veda-bg text-veda-text font-['Inter',sans-serif] min-h-screen flex items-center justify-center overflow-hidden select-none">
+  <body class="bg-[#2692AC] text-[#0F172A] font-['Inter',sans-serif] min-h-screen overflow-x-hidden overflow-y-auto select-none flex flex-col">
+    
+    <!-- Main Container filling the whole screen -->
+    <div id="app" class="w-full h-full min-h-screen flex flex-col relative">
+      
+      <!-- Hidden Theme Toggle to satisfy TS requirements -->
+      <button id="themeToggleBtn" class="hidden"></button>
 
-    <!-- Background gradient orbs -->
-    <div class="fixed inset-0 pointer-events-none overflow-hidden">
-      <div class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl"></div>
-      <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl"></div>
-    </div>
-
-    <!-- Main Container -->
-    <div id="app" class="relative z-10 w-full max-w-2xl mx-auto px-6 py-10">
-
-      <!-- Header -->
-      <div class="text-center mb-10">
-        <h1 class="text-5xl font-extrabold tracking-tight">
-          <span class="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-            VEDA
-          </span>
-        </h1>
-        <p class="mt-2 text-veda-text-muted text-sm tracking-wide">
-          Visual Engine for Document Accessibility
-        </p>
-      </div>
-
-      <!-- Upload Zone -->
-      <div
-        id="uploadZone"
-        class="group relative border-2 border-dashed border-veda-border rounded-2xl p-10 text-center cursor-pointer transition-all duration-300 hover:border-veda-accent hover:bg-veda-surface/50 mb-8"
-      >
-        <!-- Upload Icon -->
-        <div class="animate-float mb-4">
-          <svg class="mx-auto w-14 h-14 text-veda-text-muted group-hover:text-veda-accent transition-colors duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.338-2.32 3 3 0 013.182 5.595H6.75z" />
-          </svg>
-        </div>
-        <p class="text-lg font-semibold text-veda-text-muted group-hover:text-veda-text transition-colors duration-300">
-          Upload Documents
-        </p>
-        <p class="text-xs text-veda-text-muted/60 mt-1">
-          PDF, PNG, JPG, TIFF — Click to browse
-        </p>
-
-        <!-- File list (shown after upload) -->
-        <div id="fileList" class="mt-5 space-y-2 hidden"></div>
-      </div>
-
-      <!-- Mic + Start Row -->
-      <div class="flex items-center justify-center gap-8">
-
-        <!-- Mic Button -->
-        <div class="flex flex-col items-center gap-2">
-          <div class="relative">
-            <!-- Pulse ring (visible when recording) -->
-            <div id="micPulse" class="absolute inset-0 rounded-full bg-red-500/40 hidden animate-pulse-ring"></div>
-            <button
-              id="micBtn"
-              class="relative w-16 h-16 rounded-full bg-veda-surface border-2 border-veda-border flex items-center justify-center transition-all duration-300 hover:border-veda-accent hover:bg-veda-surface-hover hover:scale-105 active:scale-95"
-            >
-              <svg id="micIcon" class="w-7 h-7 text-veda-text-muted transition-colors duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
-              </svg>
-            </button>
+      <!-- ═══════════════════════════════════════════════ -->
+      <!-- PHASE 1: Upload (Home)                          -->
+      <!-- ═══════════════════════════════════════════════ -->
+      <div id="phaseUpload" class="flex-1 w-full flex flex-col items-center justify-center p-12 relative min-h-screen">
+        
+        <!-- Mode Button (decorative as requested no shift option) -->
+        <div class="absolute right-12 top-1/2 -translate-y-1/2">
+          <div class="w-16 h-16 rounded-full bg-[#1a7086] border-2 border-[#166074] flex items-center justify-center text-sm font-medium opacity-80 cursor-default">
+            mode
           </div>
-          <span id="micLabel" class="text-xs text-veda-text-muted">Record Voice</span>
         </div>
 
-        <!-- Start Button -->
-        <button
-          id="startBtn"
-          class="relative px-10 py-4 rounded-xl font-semibold text-white text-lg overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-indigo-500/25 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
-        >
-          <!-- Gradient background -->
-          <div class="absolute inset-0 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-xl"></div>
-          <!-- Shimmer effect -->
-          <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full hover:translate-x-full transition-transform duration-700"></div>
-          <span class="relative z-10 flex items-center gap-2">
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
-            </svg>
+        <h1 class="text-7xl md:text-[8rem] font-black text-[#0F172A] mb-20 font-['Playfair_Display',serif] tracking-tight">
+          VEDA
+        </h1>
+        
+        <!-- Upload Zone matching the mockup pill -->
+        <div id="uploadZone" class="w-full max-w-2xl bg-[#E2E8F0] hover:bg-[#D1D5DB] transition-colors rounded-[2rem] px-12 py-12 text-center cursor-pointer shadow-sm border border-transparent">
+          <p class="text-3xl text-[#334155] font-['Inter'] font-normal">
+            Upload your Document
+          </p>
+        </div>
+
+        <!-- Hidden badges/options preserved for backend functionality but matched to minimal style -->
+        <div id="fileBadge" class="mt-6 hidden text-[#0F172A] text-lg bg-white/40 px-6 py-2 rounded">
+          <span id="fileNameText" class="truncate font-medium"></span>
+        </div>
+
+        <div id="optionsRow" class="hidden mt-8 flex flex-col items-center gap-4">
+          <button id="startBtn" class="bg-[#0F172A] text-white hover:bg-black px-8 py-4 rounded font-medium text-lg w-full max-w-xs transition-colors">
             Start Processing
-          </span>
-        </button>
+          </button>
+          <button id="voiceBtn" class="bg-transparent hover:bg-white/20 text-[#0F172A] px-6 py-3 rounded transition-colors text-sm font-medium border border-[#0F172A]/30">
+            <span id="voiceLabel">Or Speak Destination</span>
+          </button>
+        </div>
+
+        <div id="voiceFeedback" class="hidden text-center mt-4 text-[#0F172A]">
+          <span id="voiceTranscript" class="block font-medium text-lg"></span>
+          <span id="parsedPage" class="block text-sm opacity-80"></span>
+        </div>
+
       </div>
 
-      <!-- Progress Bar -->
-      <div id="progressContainer" class="mt-8 hidden">
-        <div class="w-full bg-veda-surface rounded-full h-2.5 overflow-hidden">
-          <div
-            id="progressFill"
-            class="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full transition-all duration-500 ease-out"
-            style="width: 0%"
-          ></div>
+      <!-- ═══════════════════════════════════════════════ -->
+      <!-- PHASE 2: Results (/document)                  -->
+      <!-- ═══════════════════════════════════════════════ -->
+      <div id="phaseResults" class="hidden flex-1 w-full min-h-screen flex flex-row">
+        
+        <!-- Left Pane: Sections (resultsPanel) -->
+        <div class="w-1/2 flex flex-col border-r border-[#0F172A] p-8 h-screen overflow-hidden">
+          
+          <!-- Minimal TTS Controls -->
+          <div id="ttsControls" class="mb-6 flex items-center gap-3 shrink-0 rounded px-4 py-2 w-max bg-white/10">
+            <button id="ttsPlayBtn" class="text-sm font-semibold tracking-wide text-[#0F172A] hover:opacity-70">PLAY</button>
+            <button id="ttsPauseBtn" class="text-sm font-semibold tracking-wide text-[#0F172A] hover:opacity-70 hidden">PAUSE</button>
+            <button id="ttsResumeBtn" class="text-sm font-semibold tracking-wide text-[#0F172A] hover:opacity-70 hidden">RESUME</button>
+            <span class="text-[#0F172A] opacity-50 mx-1">|</span>
+            <button id="ttsStopBtn" class="text-sm font-semibold tracking-wide text-[#0F172A] hover:opacity-70">STOP</button>
+            <span id="ttsStatus" class="ml-4 text-xs font-medium text-[#0F172A] opacity-80 uppercase tracking-widest bg-white/20 px-2 py-1 rounded">Ready</span>
+          </div>
+
+          <!-- Document Results dynamically placed here -->
+          <div id="resultsPanel" class="flex-1 overflow-y-auto pr-4 results-scroll">
+            <!-- Dynamically inserted .region-block elements -->
+          </div>
         </div>
-        <p id="progressText" class="text-xs text-veda-text-muted mt-2 text-center"></p>
+
+        <!-- Right Pane: Document Image Viewer -->
+        <div class="w-1/2 flex flex-col p-8 items-center h-screen overflow-hidden">
+          <h2 class="text-4xl text-[#0F172A] mb-8 font-['Playfair_Display',serif] tracking-tight mt-4">Your Document</h2>
+          
+          <div class="flex-1 w-full flex items-center justify-center relative shadow-md bg-white border border-[#0F172A]/20">
+            <p id="docImagePlaceholder" class="text-[#0F172A] opacity-60 text-lg">Processing...</p>
+            <img id="docImageViewer" class="absolute inset-0 w-full h-full object-contain hidden bg-white" src="" />
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ═══════════════════════════════════════════════ -->
+      <!-- Progress Bar                                   -->
+      <!-- ═══════════════════════════════════════════════ -->
+      <div id="progressContainer" class="hidden w-full max-w-2xl mx-auto absolute bottom-12 left-1/2 -translate-x-1/2 z-50">
+        <div class="w-full bg-[#E2E8F0]/30 h-1">
+          <div id="progressFill" class="bg-[#0F172A] h-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+        <p id="progressText" class="text-sm text-[#0F172A] text-center mt-3 font-medium bg-white/50 inline-block px-4 py-1 rounded mx-auto"></p>
       </div>
 
       <!-- Status Bar -->
-      <div id="statusBar" class="mt-4 text-center">
-        <p id="statusText" class="text-sm text-veda-text-muted/60"></p>
+      <div id="statusBar" class="hidden absolute bottom-4 left-1/2 -translate-x-1/2 z-50">
+        <p id="statusText" class="text-[13px] text-[#0F172A] opacity-70"></p>
       </div>
 
     </div>
